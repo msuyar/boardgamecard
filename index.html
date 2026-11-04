@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141E36">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Spellcard Forge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Marcellus&display=swap">
+<style>
+/* Layout: card-maker's workbench. Form on the left, the card lit on a stage in the middle, the deck as a rail on the right. Phones stack card first. */
+:root{
+  --bg:#E7E9ED; --panel:#F8F9FB; --field:#FFFFFF; --ink:#1A1E26; --muted:#5A6271; --line:#D1D5DC;
+  --accent:#8A5A0F; --accent-ink:#FFFFFF; --stage:#D6DAE1; --stage-glow:#F5F6F8;
+  --ok:#2E7D4F; --warn:#A86F12; --danger:#B3261E;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-display:"Marcellus",Georgia,"Times New Roman",serif;
+  --f-text:"Crimson Pro",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --noise:linear-gradient(transparent,transparent);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161B; --panel:#1C2027; --field:#232831; --ink:#E6E8ED; --muted:#99A1B0; --line:#2F3540;
+    --accent:#E2AA4C; --accent-ink:#1A1408; --stage:#0E1014; --stage-glow:#2A2F38;
+    --ok:#5CC48A; --warn:#E8B04B; --danger:#F07167; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13161B; --panel:#1C2027; --field:#232831; --ink:#E6E8ED; --muted:#99A1B0; --line:#2F3540;
+  --accent:#E2AA4C; --accent-ink:#1A1408; --stage:#0E1014; --stage-glow:#2A2F38;
+  --ok:#5CC48A; --warn:#E8B04B; --danger:#F07167; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.45 var(--f-ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- header ---------- */
+html{scroll-padding-top:calc(var(--hdr,80px) + 8px)}
+/* The header stays pinned so Add to deck is always in reach. The shadow trick paints its background edge to edge. */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;max-width:1480px;margin:0 auto 16px;padding-block:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;
+  background:var(--bg);box-shadow:0 0 0 100vmax var(--bg),0 1px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:16;background:var(--bg)}
+@media (max-width:640px){.brand p{display:none}.brand h1{font-size:21px}.brand svg{width:30px;height:30px}}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{width:38px;height:38px;color:var(--accent);flex:none}
+.brand h1{margin:0;font:400 25px/1.1 var(--f-display);letter-spacing:.01em}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.status{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;font:500 12px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dot,var(--muted))}
+.status[data-s="saved"]{--dot:var(--ok)}
+.status[data-s="new"]{--dot:var(--warn)}
+.status[data-s="saving"]{--dot:var(--accent)}
+.status[data-s="readonly"]{--dot:var(--danger)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:500 13px/1 var(--f-ui);cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){border-color:var(--ink)}
+.btn-danger{color:var(--danger)}
+.btn-danger.armed{background:var(--danger);border-color:var(--danger);color:var(--panel)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ---------- workbench grid ---------- */
+.bench{max-width:1480px;margin:0 auto;display:grid;gap:16px;grid-template-columns:minmax(0,1fr);grid-template-areas:"preview" "editor" "deck"}
+@media (min-width:840px){
+  .bench{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-areas:"editor preview" "editor deck";align-items:start}
+}
+@media (min-width:1240px){
+  .bench{grid-template-columns:minmax(320px,380px) minmax(0,1fr) 290px;grid-template-areas:"editor preview deck"}
+  .preview{position:sticky;top:calc(var(--hdr,80px) + 12px)}
+  .deck{position:sticky;top:calc(var(--hdr,80px) + 12px);max-height:calc(100vh - var(--hdr,80px) - 24px)}
+}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+
+/* ---------- editor ---------- */
+.editor{grid-area:editor;padding:4px 18px 10px;min-width:0}
+.group{display:grid;gap:10px;padding:16px 0;border-bottom:1px solid var(--line)}
+.group:last-child{border-bottom:0}
+.group h2{margin:0;font:600 11px/1 var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.group h2 small{font:500 11px/1 var(--f-mono);letter-spacing:0;text-transform:none;color:var(--accent)}
+.field{display:grid;gap:5px;min-width:0}
+.field>span{font-size:12px;font-weight:500;color:var(--muted)}
+input[type=text],input[type=number],input[type=search],select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
+input[type=text]:hover,input[type=number]:hover,select:hover,textarea:hover{border-color:var(--muted)}
+textarea{resize:vertical;min-height:88px;font:400 16px/1.35 var(--f-text)}
+.mono{font-family:var(--f-mono)!important;letter-spacing:.04em}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.row3{display:grid;gap:10px;grid-template-columns:76px minmax(0,1fr) 76px;align-items:end}
+.hint{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+.sub{display:grid;gap:10px}
+.warn{margin:-4px 0 0;font-size:12px;font-weight:500;color:var(--danger)}
+.toggle{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;cursor:pointer;width:fit-content}
+.toggle input{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer}
+.hint code{font:500 11.5px var(--f-mono);color:var(--ink);background:var(--bg);padding:1px 4px;border-radius:4px}
+
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+/* "None" gets its own full-width row under the six elements. */
+.swatches .sw[data-c=""]{grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:8px;padding:7px 0;font-size:12px}
+.swatches .sw[data-c=""] .pip{font-size:18px}
+.sw{display:grid;justify-items:center;gap:5px;padding:12px 0 7px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:11px;font-weight:500;color:var(--muted);
+  background:var(--sf) top/100% 5px no-repeat,var(--field)}
+.sw .pip{font-size:22px}
+.sw{min-width:0}
+.sw span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--ink)}
+.kindpick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.kp{display:grid;justify-items:center;gap:5px;padding:10px 0 7px;border:1px solid var(--line);border-radius:9px;background:var(--field);cursor:pointer;font-size:11px;font-weight:500;color:var(--muted)}
+.kp svg{width:24px;height:24px;display:block;color:var(--ink)}
+.kp:hover{border-color:var(--muted)}
+.kp[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--ink)}
+.kp[aria-checked="true"] svg{color:var(--accent)}
+
+.pipbar{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.pb{display:inline-grid;place-items:center;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--field);cursor:pointer;font-size:17px}
+.pb:hover{border-color:var(--muted)}
+.pipbar .linkbtn{margin-left:4px;font-size:12px}
+
+.diepick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.dp{display:grid;justify-items:center;gap:3px;padding:6px 0 5px;border:1px solid var(--line);border-radius:7px;background:var(--field);cursor:pointer;font:500 11px/1 var(--f-mono);color:var(--muted)}
+.dp .die{width:22px;height:22px}
+.dp .die b{display:none}
+.dp[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--ink)}
+
+.drop{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px;border:1.5px dashed var(--line);border-radius:9px;color:var(--muted);font-size:13px}
+.drop.over{border-color:var(--accent);background:var(--bg)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* ---------- preview ---------- */
+.preview{grid-area:preview;display:grid;gap:14px;min-width:0}
+.stage{display:grid;place-items:center;padding:30px 16px;border:1px solid var(--line);border-radius:14px;
+  background:radial-gradient(ellipse 70% 62% at 50% 34%,var(--stage-glow),var(--stage))}
+.card-wrap{container-type:inline-size;width:min(100%,440px)}
+.roller{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:12px 14px}
+.roller h2{margin:0;font:600 11px/1 var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--field)}
+.stepper button{width:30px;height:32px;border:0;background:none;cursor:pointer;font-size:16px}
+.stepper button:hover{background:var(--bg)}
+.stepper output{min-width:68px;text-align:center;font:500 12px/1 var(--f-mono)}
+.rresult{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 220px}
+.rtotal{font:400 34px/1 var(--f-display);font-variant-numeric:tabular-nums;min-width:2ch;text-align:right;color:var(--accent)}
+.rbreak{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0;font:500 12px/1.2 var(--f-mono);color:var(--muted)}
+.rbreak .die{width:26px;height:26px}
+.rbreak .die b{font-size:10px}
+.rbreak .sep{padding:0 2px}
+.rempty{color:var(--muted);font-size:13px}
+
+/* ---------- deck ---------- */
+.deck{grid-area:deck;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.deck-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.deck-head h2{margin:0;font:400 19px/1 var(--f-display)}
+.deck-head h2 span{font:500 12px var(--f-mono);color:var(--muted);margin-left:4px}
+.deck-io{display:flex;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--field);cursor:pointer;font-size:12px;color:var(--muted)}
+.chip .pip{font-size:13px}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.deck-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;overflow-y:auto;min-height:0}
+.deck-item{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--field);cursor:pointer;text-align:left;
+  box-shadow:inset 4px 0 0 var(--sf)}
+.deck-item:hover{border-color:var(--muted)}
+.deck-item[aria-current="true"]{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--sf),0 0 0 1px var(--accent)}
+.deck-item>.pip{font-size:20px;margin-left:4px}
+.di-name{display:block;font:400 15px/1.2 var(--f-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.di-sub{display:block;margin-top:2px;font:500 11px/1.3 var(--f-mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.di-cost{display:flex;gap:2px;font-size:13px}
+.deck-empty{padding:18px 12px;border:1.5px dashed var(--line);border-radius:9px;color:var(--muted);font-size:13px;text-align:center;line-height:1.5}
+.deck-empty strong{display:block;color:var(--ink);font:400 16px var(--f-display);margin-bottom:4px}
+.deck-note{margin:0;font-size:11.5px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);max-width:min(92vw,460px);padding:10px 16px;border-radius:9px;background:var(--ink);color:var(--bg);font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- pips and dice (shared by the UI and the card) ---------- */
+.pip{display:inline-grid;place-items:center;width:1.12em;height:1.12em;border-radius:50%;flex:none;vertical-align:middle;line-height:1;
+  background:var(--pc,radial-gradient(circle at 35% 30%,#fff3cf 0%,#d9b25e 55%,#8a6420 100%));box-shadow:0 0 0 .07em #c9a45c,0 .06em .14em rgba(0,0,0,.5)}
+.pip svg{width:64%;height:64%;display:block}
+.pip>span{font:700 .66em/1 var(--f-ui);color:#1a1206}
+.die{position:relative;display:inline-block;flex:none}
+.die svg{width:100%;height:100%;display:block}
+.die b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-ui);font-weight:700;line-height:1}
+.die[data-s="4"] b{padding-top:30%}
+.die[data-s="10"] b{padding-bottom:10%}
+
+/* ---------- the card (sizes in cqw: 100cqw = card width) ---------- */
+/* Navy and gold frame: oval art ringed by the six element medallions, a parchment box (name, rules, divider, fixed flavor panel), three plaques. */
+.card{--fit:1;--ffit:1;--nfit:1;position:relative;width:100cqw;aspect-ratio:63/88;border-radius:4.6cqw;overflow:hidden;color:#2a1f12;font-family:var(--f-text);
+  background:var(--noise),radial-gradient(ellipse 85% 62% at 50% 30%,#2c3a56 0%,#18213a 52%,#0b0f1a 100%);
+  box-shadow:0 22px 44px -16px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.3)}
+.filigree{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.oval{position:absolute;left:23cqw;top:5.4cqw;width:54cqw;height:60.4cqw;padding:1.1cqw;border-radius:50%;
+  background:linear-gradient(160deg,#f6dc94 0%,#a87a32 32%,#f0cf7c 58%,#7d5a22 100%);box-shadow:0 0 0 .35cqw #0b0f18,0 0 3.4cqw rgba(0,0,0,.65)}
+.oval-art{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;background-color:#0b0f18;background-size:cover;background-repeat:no-repeat;
+  box-shadow:inset 0 0 2.4cqw rgba(0,0,0,.6)}
+.art-sym{position:absolute;left:50%;top:50%;width:26cqw;height:26cqw;margin:-13cqw 0 0 -13cqw;opacity:.3}
+.art-sym svg{width:100%;height:100%;display:block}
+.med{position:absolute;width:12.4cqw;height:12.4cqw;margin:-6.2cqw 0 0 -6.2cqw;padding:.9cqw;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff1c4 0%,#c9a04e 45%,#6e4c18 100%);box-shadow:0 .6cqw 1.2cqw rgba(0,0,0,.55),0 0 0 .3cqw #0b0f18}
+.med-in{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;box-shadow:inset 0 0 0 .3cqw rgba(0,0,0,.4),inset 0 -.8cqw 1.4cqw rgba(0,0,0,.35)}
+.med-in svg{width:60%;height:60%;display:block}
+.med.off{background:radial-gradient(circle at 35% 30%,#8f8366 0%,#5a4f3a 50%,#2b251a 100%)}
+.med.off .med-in{background:radial-gradient(circle at 35% 30%,#3a4357 0%,#1b2130 70%,#10141e 100%)!important}
+.med.off svg{opacity:.26}
+/* Opposite-element seat: an empty socket ringed in that element's light tone, with its symbol in outline. */
+.med.ghost{background:radial-gradient(circle at 35% 30%,#8f8366 0%,#5a4f3a 50%,#2b251a 100%)}
+.med.ghost .med-in{background:radial-gradient(circle at 50% 45%,#1c2333 0%,#0e121c 100%);box-shadow:inset 0 0 0 .4cqw var(--gc),inset 0 0 1.8cqw var(--gc)}
+.med.ghost svg{opacity:.9}
+.setlogo{position:absolute;left:5cqw;top:4.8cqw;width:11cqw;height:11cqw;background-size:contain;background-repeat:no-repeat;background-position:center}
+.parch{position:absolute;left:6.6cqw;right:6.6cqw;top:70.4cqw;bottom:17.4cqw;display:flex;flex-direction:column;padding:2cqw 3.2cqw 2cqw;border-radius:1.2cqw;
+  background:var(--noise),radial-gradient(ellipse at 50% 40%,#f3e9d2 0%,#e6d6b4 70%,#d3bf96 100%);border:.55cqw solid #b08a4a;
+  box-shadow:0 0 0 .4cqw #0b0f18,inset 0 0 2.4cqw rgba(110,80,30,.35)}
+.card.no-plaques .parch{bottom:6.4cqw}
+.phead{flex:none;text-align:center;padding-bottom:1cqw;margin-bottom:1.3cqw;border-bottom:.22cqw solid rgba(138,106,54,.4)}
+/* Line height leaves room for descenders (g, y, p), which overflow:hidden would otherwise clip. */
+.cname{display:block;font:400 calc(5.8cqw * var(--nfit))/1.32 var(--f-display);white-space:nowrap;overflow:hidden;color:#24180c}
+.ctype{display:flex;justify-content:center;align-items:center;gap:1.6cqw;margin-top:.3cqw}
+.ctype svg{width:4.6cqw;height:4.6cqw;flex:none;display:block}
+.ctype i{width:9cqw;height:.25cqw;background:linear-gradient(90deg,rgba(138,106,54,0),#8a6a36)}
+.ctype i:last-child{background:linear-gradient(90deg,#8a6a36,rgba(138,106,54,0))}
+.rules-area{flex:1;min-height:0;overflow:hidden;font-size:calc(4.6cqw * var(--fit));line-height:1.2;color:#1c140a}
+.rules-area p{margin:0 0 .38em}
+.rules-area p:last-child{margin-bottom:0}
+.divider{flex:none;position:relative;height:2.8cqw}
+.divider::before{content:"";position:absolute;left:3%;right:3%;top:50%;height:.25cqw;margin-top:-.12cqw;background:linear-gradient(90deg,rgba(138,106,54,0) 0%,#8a6a36 22%,#8a6a36 78%,rgba(138,106,54,0) 100%)}
+.divider i{position:absolute;left:50%;top:50%;width:1.9cqw;height:1.9cqw;margin:-.95cqw 0 0 -.95cqw;transform:rotate(45deg);background:#eadcbc;border:.3cqw solid #8a6a36}
+/* The flavor panel has a fixed height, so it sits in the same place on every card. */
+.flavor-area{flex:none;height:7.4cqw;padding:.4cqw 1.8cqw;border:.25cqw solid rgba(138,106,54,.55);border-radius:1cqw;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;
+  font-size:calc(3.6cqw * var(--ffit));font-style:italic;line-height:1.12;text-align:center;color:#3a2c18}
+.flavor-area p{margin:0}
+.parch .pip{width:1em;height:1em;vertical-align:-.12em}
+.idie{white-space:nowrap;font-weight:600}
+.idie .die{width:1.2em;height:1.2em;vertical-align:-.26em;margin-right:.12em}
+.idie .die b{font-size:.42em}
+.icost{display:inline-flex;gap:.12em;vertical-align:-.1em}
+.plaques{position:absolute;left:6.6cqw;right:6.6cqw;top:123.2cqw;height:10cqw;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2.4cqw}
+.plaque{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9cqw;padding:0 1cqw;border-radius:1.6cqw;border:.5cqw solid #b08a4a;
+  background:linear-gradient(180deg,#1f2a3e 0%,#0e1420 100%);box-shadow:inset 0 0 0 .35cqw #0b0f18,inset 0 0 0 .6cqw rgba(201,164,92,.35),0 .5cqw 1cqw rgba(0,0,0,.5)}
+.pv{display:flex;align-items:center;gap:1cqw;font:700 4.4cqw/1 var(--f-ui);font-variant-numeric:tabular-nums;color:#f3e6c4;white-space:nowrap}
+.pv.long{font-size:3.7cqw}
+.pv.xlong{font-size:3.1cqw}
+.pv .die{width:6cqw;height:6cqw}
+.pv .die b{font-size:2.1cqw}
+.pv .pip{font-size:4.2cqw}
+.pv .pips{display:flex;align-items:center;gap:.7cqw}
+.cost-plus{font:700 .9em/1 var(--f-ui);margin-right:.1em}
+.pl{font:600 2.2cqw/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:#c9a45c;white-space:nowrap}
+.foot{position:absolute;left:9cqw;right:9cqw;bottom:3.7cqw;font:500 1.85cqw/1 var(--f-mono);letter-spacing:.04em;color:#8f8a7c;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M16 2 28 9v14l-12 7-12-7V9z"/><path d="M16 8l8 13H8z"/><path d="M4 9l4 12M28 9l-4 12M16 2v6M16 30l-8-9M16 30l8-9"/></svg>
+    <div>
+      <h1>Spellcard Forge</h1>
+      <p>Spell cards with dice damage, upcast cost and upcast damage.</p>
+    </div>
+  </div>
+  <div class="actions">
+    <span class="status" id="status" data-s="new">Not in deck</span>
+    <button class="btn" id="btnNew" type="button">New card</button>
+    <button class="btn" id="btnDup" type="button">Duplicate</button>
+    <button class="btn btn-danger" id="btnDel" type="button">Delete</button>
+    <button class="btn" id="btnPng" type="button">Export PNG</button>
+    <button class="btn btn-primary" id="btnSave" type="button">Add to deck</button>
+  </div>
+</header>
+
+<main class="bench">
+  <section class="editor panel" aria-label="Card details">
+    <div class="group">
+      <h2>Main element</h2>
+      <div class="swatches" id="swatches" role="radiogroup" aria-label="Main element"></div>
+      <p class="hint">Its opposite shows as an outlined orb, its orbs seat first, and dice use its color. Pick <strong>None</strong> for common cards with no element or mana cost.</p>
+    </div>
+
+    <div class="group">
+      <h2>Name and cost</h2>
+      <label class="field"><span>Name</span><input type="text" id="fName" data-f="name" maxlength="42" autocomplete="off"></label>
+      <label class="field"><span>Casting cost</span><input type="text" id="fCost" data-f="cost" maxlength="14" class="mono" autocomplete="off"></label>
+      <div class="pipbar" data-target="fCost"></div>
+      <p class="warn" id="costWarn" hidden></p>
+      <p class="hint">Each letter is one orb around the art. An element's first orb sits in its own seat and more spread to either side, up to 5, never into its opposite's seat. <code>N</code> Nature, <code>A</code> Arcana, <code>R</code> Radiant, <code>V</code> Violence, <code>C</code> Calmness, <code>D</code> Demonic. Opposites: Radiant–Demonic, Calmness–Violence, Arcana–Nature.</p>
+    </div>
+
+    <div class="group">
+      <h2>Art</h2>
+      <div class="drop" id="drop">
+        <input type="file" id="fArt" accept="image/png,image/jpeg,image/webp,image/gif">
+        <label class="btn btn-sm" for="fArt">Upload art</label>
+        <span id="dropText">or drop an image here</span>
+        <button class="linkbtn" id="btnArtClear" type="button">Remove art</button>
+      </div>
+      <div class="row">
+        <label class="field"><span>Horizontal focus</span><input type="range" id="fArtX" data-f="artX" min="0" max="100"></label>
+        <label class="field"><span>Vertical focus</span><input type="range" id="fArtY" data-f="artY" min="0" max="100"></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Card type <small>icon under the name</small></h2>
+      <div class="kindpick" id="pickKind" role="radiogroup" aria-label="Card type"></div>
+    </div>
+
+    <div class="group">
+      <h2>Text box</h2>
+      <label class="field"><span>Rules text</span><textarea id="fRules" data-f="rules" rows="4"></textarea></label>
+      <p class="warn" id="rulesWarn" hidden>Too long to fit on the card. Shorten the rules text, or switch off damage and upcast for more room.</p>
+      <label class="field"><span>Flavor text</span><textarea id="fFlavor" data-f="flavor" rows="2"></textarea></label>
+      <p class="warn" id="flavorWarn" hidden>Too long for the flavor panel. Keep flavor to about one short sentence.</p>
+      <p class="hint">Type <code>{2d6}</code> for an inline die, <code>{R}</code> for a color symbol, <code>*word*</code> for italics. Long text shrinks a little to fit.</p>
+    </div>
+
+    <div class="group">
+      <h2>Damage <small>bottom left</small></h2>
+      <label class="toggle"><input type="checkbox" id="fHasDmg" data-f="hasDamage">This card deals damage</label>
+      <div class="sub" id="dmgFields">
+      <div class="row3">
+        <label class="field"><span>Dice</span><input type="number" id="fDmgN" data-f="dmg.count" min="0" max="30"></label>
+        <div class="field"><span>Die</span><div class="diepick" id="pickDmg" data-f="dmg.die" role="group" aria-label="Damage die"></div></div>
+        <label class="field"><span>Bonus</span><input type="number" id="fDmgB" data-f="dmg.bonus" min="-99" max="99"></label>
+      </div>
+      <label class="field"><span>Damage type</span><select id="fDmgT" data-f="dmg.type"></select></label>
+      </div>
+      <p class="hint" id="dmgOffHint">Armor, buffs and other cards without damage show only their rules and flavor text here.</p>
+    </div>
+
+    <div class="group">
+      <h2>Upcast <small>bottom middle + right</small></h2>
+      <label class="toggle"><input type="checkbox" id="fHasUp" data-f="hasUpcast">This card can be upcast</label>
+      <div class="sub" id="upFields">
+      <label class="field"><span>Upcast cost (paid each time)</span><input type="text" id="fUpCost" data-f="upCost" maxlength="14" class="mono" autocomplete="off"></label>
+      <div class="pipbar" data-target="fUpCost"></div>
+      <div class="row3" id="upDice">
+        <label class="field"><span>Dice</span><input type="number" id="fUpN" data-f="up.count" min="0" max="30"></label>
+        <div class="field"><span>Die</span><div class="diepick" id="pickUp" data-f="up.die" role="group" aria-label="Upcast die"></div></div>
+        <label class="field"><span>Bonus</span><input type="number" id="fUpB" data-f="up.bonus" min="-99" max="99"></label>
+      </div>
+      <p class="hint" id="upHint"></p>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Expansion logo <small>top left</small></h2>
+      <div class="drop" id="logoDrop">
+        <input type="file" id="fLogo" accept="image/png,image/webp,image/svg+xml,image/jpeg,image/gif">
+        <label class="btn btn-sm" for="fLogo">Upload logo</label>
+        <span id="logoText">a PNG with a transparent background works best</span>
+        <button class="linkbtn" id="btnLogoClear" type="button">Remove logo</button>
+      </div>
+      <p class="hint">New cards start with the logo of the card you were editing.</p>
+      <label class="field"><span>Artist credit (bottom of the card, optional)</span><input type="text" id="fArtist" data-f="artist" maxlength="32" autocomplete="off"></label>
+    </div>
+  </section>
+
+  <section class="preview" aria-label="Card preview">
+    <div class="stage"><div class="card-wrap"><div class="card" id="card"></div></div></div>
+    <div class="roller panel">
+      <h2>Test roll</h2>
+      <div class="stepper" aria-label="Number of upcasts">
+        <button type="button" id="lvDown" aria-label="One fewer upcast">&minus;</button>
+        <output id="lvOut">0 upcasts</output>
+        <button type="button" id="lvUp" aria-label="One more upcast">+</button>
+      </div>
+      <button class="btn btn-sm" type="button" id="btnRoll">Roll damage</button>
+      <div class="rresult" id="rresult" aria-live="polite"><span class="rempty">Roll to check the numbers on this card.</span></div>
+    </div>
+  </section>
+
+  <aside class="deck panel" aria-label="Deck">
+    <div class="deck-head">
+      <h2>Deck<span id="deckCount"></span></h2>
+      <div class="deck-io">
+        <button class="btn btn-sm" type="button" id="btnExportDeck">Export</button>
+        <label class="btn btn-sm" for="fImport">Merge</label>
+        <input type="file" id="fImport" accept="application/json,.json" hidden>
+      </div>
+    </div>
+    <input type="search" id="deckSearch" placeholder="Search cards" aria-label="Search cards">
+    <div class="chips" id="deckChips" role="group" aria-label="Filter by color"></div>
+    <ul class="deck-list" id="deckList"></ul>
+    <div class="deck-empty" id="deckEmpty" hidden></div>
+    <p class="deck-note" id="deckNote"></p>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  // Card palettes. Literal values because SVG pips and dice are serialized when exported.
+  // Each element: mid (main), light and dark tones. med is the medallion and pip fill, sw the swatch stripe.
+  const COLORS = {
+    N: { name: 'Nature',   mid: '#1f8f86', light: '#9ee6d4', dark: '#0b4048' },
+    A: { name: 'Arcana',   mid: '#7b4cc4', light: '#d7b8ff', dark: '#2f1560' },
+    R: { name: 'Radiant',  mid: '#d9a52c', light: '#fff4c2', dark: '#7a520c' },
+    V: { name: 'Violence', mid: '#c8281f', light: '#ff9b85', dark: '#5a0a07' },
+    C: { name: 'Calmness', mid: '#7f8791', light: '#e9ecf0', dark: '#3c424a' },
+    D: { name: 'Demonic',  mid: '#8e2a6e', light: '#e08ac4', dark: '#16050f' }
+  };
+  {
+    const shine = 'radial-gradient(circle at 34% 28%,rgba(255,255,255,.42) 0%,rgba(255,255,255,0) 42%)';
+    const shade = 'radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 48%,rgba(0,0,0,.5) 100%)';
+    for (const p of Object.values(COLORS)) {
+      p.med = `radial-gradient(circle at 35% 30%,${p.light} 0%,${p.mid} 55%,${p.dark} 100%)`;
+      p.sw = `linear-gradient(${p.mid},${p.mid})`;
+      p.df = p.mid; p.fd = p.dark; p.dl = '#ffffff';
+    }
+    // Nature blends blue into green.
+    COLORS.N.med = `${shine},${shade},linear-gradient(135deg,#2f86cc 0%,#1f9a74 100%)`;
+    COLORS.N.sw = 'linear-gradient(90deg,#2f86cc,#1f9a74)';
+    // Demonic is the other five colliding.
+    const mix = ['V', 'A', 'N', 'R', 'C'].map(k => COLORS[k].mid);
+    COLORS.D.med = `${shine},${shade},linear-gradient(135deg,${mix[0]} 0%,${mix[1]} 25%,#2f86cc 45%,${mix[2]} 55%,${mix[3]} 75%,${mix[4]} 100%)`;
+    COLORS.D.sw = `linear-gradient(90deg,${mix.join(',')})`;
+  }
+  // Frame tint per element: [center, edge] of the frame's radial glow.
+  const FRAME_TONES = { N: ['#1d5c6a', '#05181c'], A: ['#45296f', '#100622'], R: ['#6b5518', '#1c1405'], V: ['#6c1e18', '#1d0504'], C: ['#4a515b', '#121519'] };
+  const FRAME_NAVY = 'radial-gradient(ellipse 85% 62% at 50% 30%,#2c3a56 0%,#18213a 52%,#0b0f1a 100%)';
+  const VIGNETTE = 'radial-gradient(ellipse 85% 62% at 50% 30%,rgba(0,0,0,0) 0%,rgba(0,0,0,.35) 55%,rgba(0,0,0,.82) 100%)';
+  // A card with no element in its cost keeps the navy frame; one element tints it; several (or Demonic) blend.
+  function frameBackground(els) {
+    if (!els.length) return FRAME_NAVY;
+    if (els.length === 1 && els[0] !== 'D') { const [c, e] = FRAME_TONES[els[0]]; return `radial-gradient(ellipse 85% 62% at 50% 30%,${c} 0%,${e} 100%)`; }
+    const tones = (els.length === 1 ? ['V', 'A', 'N', 'R', 'C'] : els.filter(k => k !== 'D')).map(k => FRAME_TONES[k][0]);
+    if (els.includes('D') && els.length > 1) tones.push('#4a1638');
+    if (tones.length === 1) tones.push(tones[0]);
+    return `${VIGNETTE},linear-gradient(135deg,${tones.join(',')})`;
+  }
+  const KINDS = {
+    lackey: { label: 'Lackey', icon: '<circle cx="12" cy="7" r="4.2"/><path d="M3.8 21.5c0-4.9 3.7-8.4 8.2-8.4s8.2 3.5 8.2 8.4z"/><path d="M8.2 4.2 7 1.5l3 1.6zM15.8 4.2 17 1.5l-3 1.6z"/>' },
+    spell:  { label: 'Spell',  icon: '<polygon points="2.8,19.6 4.4,21.2 15.2,10.4 13.6,8.8"/><path d="M17.2 1.8l1.3 3.5 3.5 1.3-3.5 1.3-1.3 3.5-1.3-3.5-3.5-1.3 3.5-1.3z"/><circle cx="8" cy="5" r="1.2"/><circle cx="20" cy="15" r="1"/>' },
+    buff:   { label: 'Buff',   icon: '<path d="M12 2.5l8.2 8.2H15v3.6H9v-3.6H3.8z"/><path d="M9 16h6v2.2H9zM9 19.6h6v1.9H9z"/>' },
+    debuff: { label: 'Debuff', icon: '<path d="M12 21.5l-8.2-8.2H9V9.7h6v3.6h5.2z"/><path d="M9 5.8h6V8H9zM9 2.5h6v1.9H9z"/>' },
+    item:   { label: 'Item',   icon: '<path d="M9.4 1.8h5.2v2.1h-1v4.4l5.1 7.7A3.7 3.7 0 0 1 15.6 21.8H8.4a3.7 3.7 0 0 1-3.1-5.8l5.1-7.7V3.9h-1z"/><path d="M7.4 15.2h9.2" stroke="#e9dcbc" stroke-width="1"/>' }
+  };
+  const kindSVG = (k, fill) => `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true">${(KINDS[k] || KINDS.spell).icon}</svg>`;
+  // Medallion seats around the oval, as [element, x, y] in card-width units.
+  const MEDALLIONS = [['R', 50, 8], ['C', 75.6, 20.5], ['N', 75.6, 50.7], ['D', 50, 63.4], ['V', 24.4, 50.7], ['A', 24.4, 20.5]];
+  const ORDER = ['N', 'A', 'R', 'V', 'C', 'D'];
+  // Cards with no main element ('' — common cards without mana): bronze dice, a navy art placeholder, no glowing medallion.
+  const NEUTRAL = { name: 'None', mid: '#5b6372', light: '#3a4866', dark: '#0b0f18', df: '#9a7634', fd: '#2b1f0a', dl: '#ffffff', sw: 'linear-gradient(#5b6372,#5b6372)' };
+  const pal = c => COLORS[c] || NEUTRAL;
+  const NONE_PIP = '<span class="pip"><span>—</span></span>';
+  const elementPip = c => COLORS[c] ? pipHTML(c) : NONE_PIP;
+  const SWATCH_ORDER = [...ORDER, ''];
+  // Cards saved before the color rename used W U B R G P.
+  const OLD_LETTERS = { W: 'R', U: 'N', B: 'D', R: 'V', G: 'N', P: 'A' };
+  const DIE_SIDES = [4, 6, 8, 10, 12, 20];
+  const RARITY = {
+    common:   { label: 'Common',   letter: 'C', gem: '#1f1d1b' },
+    uncommon: { label: 'Uncommon', letter: 'U', gem: '#aab6c0' },
+    rare:     { label: 'Rare',     letter: 'R', gem: '#d9ae3c' },
+    mythic:   { label: 'Mythic',   letter: 'M', gem: '#e5582a' }
+  };
+  const DMG_TYPES = ['', 'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder', 'healing'];
+  const LS_KEY = 'spellcard-forge.deck.v1';
+
+  const SUN = (() => {
+    let s = '<circle cx="12" cy="12" r="4.4"/>';
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      const p = (r, d) => `${(12 + r * Math.cos(a + d)).toFixed(2)},${(12 + r * Math.sin(a + d)).toFixed(2)}`;
+      s += `<polygon points="${p(11, 0)} ${p(6, .33)} ${p(6, -.33)}"/>`;
+    }
+    return s;
+  })();
+  function symbolSVG(c, fill = '#ffffff', pc = COLORS[c].mid) {
+    const body = {
+      N: '<path d="M12 2l6.5 8.5h-3.2l4.2 6.5h-6.3V22h-2.4v-5H4.5l4.2-6.5H5.5z"/>',
+      A: '<path d="M12 1.8l2.7 7.5 7.5 2.7-7.5 2.7-2.7 7.5-2.7-7.5L1.8 12l7.5-2.7z"/>',
+      R: SUN,
+      V: '<path d="M12 1.5l2.2 4.3v8.7H9.8V5.8z"/><path d="M6 14.5h12v2.2H6z"/><path d="M10.9 16.7h2.2v3.6h-2.2z"/><circle cx="12" cy="21.3" r="1.5"/>',
+      C: `<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="7" fill="${pc}"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="2.8" fill="${pc}"/>`,
+      D: `<path d="M3.5 2.5c0 4.3 1.6 6.6 4.4 7.6l1.2-2C7 7.2 5.2 5.4 3.5 2.5zM20.5 2.5c-1.7 2.9-3.5 4.7-5.6 5.6l1.2 2c2.8-1 4.4-3.3 4.4-7.6z"/><path d="M12 7a6.5 6.5 0 0 0-6.5 6.5c0 3 1.9 5.4 4 6.5V22h5v-2c2.1-1.1 4-3.5 4-6.5A6.5 6.5 0 0 0 12 7z"/><polygon points="7.6,12 11,13.6 8.3,14.8" fill="${pc}"/><polygon points="16.4,12 13,13.6 15.7,14.8" fill="${pc}"/>`
+    }[c];
+    return `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true">${body}</svg>`;
+  }
+  const pipHTML = c => `<span class="pip" style="--pc:${COLORS[c].med}">${symbolSVG(c)}</span>`;
+  // The symbol drawn as an outline only, in the element's light tone, for the opposite-element seat.
+  const outlineSVG = c => symbolSVG(c, 'none', 'none').replace('<svg ', `<svg stroke="${COLORS[c].light}" stroke-width="1.2" stroke-linejoin="round" `);
+
+  // Gold filigree drawn over the navy frame: double border, thorned corner sweeps, side ribs and spikes at the parchment corners.
+  const FILIGREE = (() => {
+    const side = `
+      <path d="M3.6 26 C4 14 7 7.5 15 4.2"/>
+      <path d="M5.5 5.5 C12 9 16.5 14 18.6 21.5"/>
+      <path d="M5.5 5.5 C9 12 10.5 18 10.2 27"/>
+      <path d="M8.2 29 C11.6 39 12.2 51 9.4 64"/>
+      <path d="M10.2 27 l-1.4 3.4 2.6 -.6z" fill="url(#gold)"/>
+      <path d="M15 4.2 l3.4 -1 -1 2.8z" fill="url(#gold)"/>
+      <path transform="translate(0 -6.4)" d="M2.6 74.5 C5 76 6.4 77 6.8 79 C7.2 77 8.8 75.6 11.5 74.8 C8.6 74.4 6.2 73 5 70.6 C4.6 72.6 3.8 73.8 2.6 74.5z" fill="url(#gold)" stroke="none"/>
+      <path d="M2.6 121.4 C5 122.8 6.4 123.6 6.8 125.6"/>`;
+    return `<svg class="filigree" viewBox="0 0 100 139.7" aria-hidden="true">
+      <defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc94"/><stop offset=".45" stop-color="#a67c35"/><stop offset="1" stop-color="#e6c46f"/></linearGradient></defs>
+      <rect x="2.2" y="2.2" width="95.6" height="135.3" rx="3.2" fill="none" stroke="#7d5a22" stroke-width=".6"/>
+      <rect x="3.3" y="3.3" width="93.4" height="133.1" rx="2.5" fill="none" stroke="url(#gold)" stroke-width=".35"/>
+      <g fill="none" stroke="url(#gold)" stroke-width=".45" stroke-linecap="round">${side}</g>
+      <g fill="none" stroke="url(#gold)" stroke-width=".45" stroke-linecap="round" transform="translate(100 0) scale(-1 1)">${side}</g>
+    </svg>`;
+  })();
+
+  const DIE_SHAPES = {
+    4:  ['<polygon points="16,3 29.5,27.5 2.5,27.5"/>', ''],
+    6:  ['<rect x="4" y="4" width="24" height="24" rx="4"/>', '<path d="M8 8h16v16H8z"/>'],
+    8:  ['<polygon points="16,2 29,16 16,30 3,16"/>', '<path d="M3 16h26"/>'],
+    10: ['<polygon points="16,2 29.5,14 16,30 2.5,14"/>', '<path d="M2.5 14 16 19.5 29.5 14M16 19.5V30"/>'],
+    12: ['<polygon points="16,2 29.3,11.7 24.2,27.3 7.8,27.3 2.7,11.7"/>', '<polygon points="16,8 22.7,12.9 20.1,20.8 11.9,20.8 9.3,12.9"/>'],
+    20: ['<polygon points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9"/>', '<path d="M16 7.5 23.5 20.5H8.5z M16 2v5.5M3.9 23l4.6-2.5M28.1 23l-4.6-2.5"/>']
+  };
+  function dieHTML(sides, c, label = sides) {
+    const p = pal(c);
+    const [shape, lines] = DIE_SHAPES[sides] || DIE_SHAPES[6];
+    return `<span class="die" data-s="${sides}"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="${p.df}" stroke="${p.fd}" stroke-width="1.6" stroke-linejoin="round">${shape}</g><g fill="none" stroke="${p.fd}" stroke-width="1" stroke-linejoin="round" opacity=".55">${lines}</g></svg><b style="color:${p.dl}">${label}</b></span>`;
+  }
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+  function parseCost(str) {
+    const s = String(str || '').toUpperCase().replace(/\s+/g, '');
+    const pips = [];
+    let i = 0, plus = false;
+    if (s[0] === '+') { plus = true; i = 1; }
+    while (i < s.length) {
+      const ch = s[i];
+      if (/\d/.test(ch)) { let j = i; while (j < s.length && /\d/.test(s[j])) j++; pips.push({ g: s.slice(i, j) }); i = j; }
+      else if (ch === 'X') { pips.push({ g: 'X' }); i++; }
+      else if (COLORS[ch]) { pips.push({ c: ch }); i++; }
+      else i++;
+    }
+    return { plus, pips };
+  }
+  function costHTML(str) {
+    const { plus, pips } = parseCost(str);
+    if (!pips.length) return '';
+    return (plus ? '<span class="cost-plus">+</span>' : '') +
+      pips.map(p => p.c ? pipHTML(p.c) : `<span class="pip"><span>${esc(p.g)}</span></span>`).join('');
+  }
+  function diceText(d, plus) {
+    const n = +d.count || 0, b = +d.bonus || 0;
+    if (!n && !b) return '—';
+    let s = n ? `${n}d${d.die}` : '';
+    if (b) s += (s ? (b > 0 ? '+' : '−') : (b > 0 ? '' : '−')) + Math.abs(b);
+    return (plus ? '+' : '') + s;
+  }
+  function richText(str, c) {
+    return esc(str).split(/\n+/).filter(l => l.trim()).map(line => '<p>' + line
+      .replace(/\{([^}]{1,14})\}/g, (m, t) => {
+        const dm = t.trim().match(/^(\d*)d(4|6|8|10|12|20)([+-]\d+)?$/i);
+        if (dm) return `<span class="idie">${dieHTML(+dm[2], c)}${dm[1] || 1}d${dm[2]}${dm[3] || ''}</span>`;
+        const cost = costHTML(t);
+        return cost ? `<span class="icost">${cost}</span>` : m;
+      })
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>') + '</p>').join('');
+  }
+  const cap = s => s ? s[0].toUpperCase() + s.slice(1) : '';
+
+  // ---------- card model ----------
+  function sampleCard() {
+    return {
+      v: 2, id: null, name: 'Skyhorn Flare', color: 'R', cost: '2R', type: 'Spell — Evocation', rarity: 'uncommon',
+      rules: 'Hurl a beam of lighthouse light at a creature you can see within 60 feet. It takes {2d6} radiant damage and sheds bright light until the start of your next turn.',
+      flavor: '"The lamp never goes out. It only changes hands."',
+      kind: 'spell', hasDamage: true, hasUpcast: true,
+      dmg: { count: 2, die: 6, bonus: 0, type: 'radiant' }, upCost: '1R', up: { count: 1, die: 6, bonus: 0 },
+      artist: '', number: '001', artId: null, artData: null, artX: 50, artY: 40, logoId: null, logoData: null
+    };
+  }
+  function blankCard(color = 'R') {
+    return {
+      v: 2, id: null, name: 'New card', color, cost: color, type: 'Spell', rarity: 'common', rules: '', flavor: '',
+      kind: 'spell', hasDamage: true, hasUpcast: false,
+      dmg: { count: 1, die: 6, bonus: 0, type: '' }, upCost: '', up: { count: 0, die: 6, bonus: 0 },
+      artist: '', number: '', artId: null, artData: null, artX: 50, artY: 50, logoId: null, logoData: null
+    };
+  }
+  const clamp = (v, lo, hi, d) => { v = Math.round(+v); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; };
+  function normalize(o) {
+    o = o && typeof o === 'object' ? o : {};
+    if (o.v !== 2) o = migrateColors(o);
+    const b = blankCard();
+    const c = { ...b, ...o, dmg: { ...b.dmg, ...(o.dmg || {}) }, up: { ...b.up, ...(o.up || {}) } };
+    if (c.color !== '' && !COLORS[c.color]) c.color = 'R';
+    if (!RARITY[c.rarity]) c.rarity = 'common';
+    for (const k of ['name', 'cost', 'type', 'rules', 'flavor', 'upCost', 'artist', 'number']) c[k] = String(c[k] ?? '');
+    for (const d of [c.dmg, c.up]) {
+      d.count = clamp(d.count, 0, 30, 0); d.bonus = clamp(d.bonus, -99, 99, 0);
+      d.die = DIE_SIDES.includes(+d.die) ? +d.die : 6;
+    }
+    c.dmg.type = DMG_TYPES.includes(c.dmg.type) ? c.dmg.type : '';
+    // Cards saved before the switches existed always showed damage, and showed upcast when they had a cost.
+    c.hasDamage = typeof o.hasDamage === 'boolean' ? o.hasDamage : true;
+    c.hasUpcast = typeof o.hasUpcast === 'boolean' ? o.hasUpcast : !!c.upCost.trim();
+    // Cards made before type icons existed get a type guessed from their old type line.
+    if (!KINDS[o.kind]) {
+      const t = c.type.toLowerCase();
+      c.kind = /lackey|minion|summon|creature|ally/.test(t) ? 'lackey' : /debuff|curse|hex/.test(t) ? 'debuff'
+        : /buff|blessing|boon/.test(t) ? 'buff' : /item|potion|armor|armour|weapon|equipment|gear/.test(t) ? 'item' : 'spell';
+    }
+    c.artX = clamp(c.artX, 0, 100, 50); c.artY = clamp(c.artY, 0, 100, 50);
+    c.artId = typeof c.artId === 'string' && /^[0-9a-f]{32}$/.test(c.artId) ? c.artId : null;
+    c.artData = typeof c.artData === 'string' && c.artData.startsWith('data:image/') ? c.artData : null;
+    c.logoId = typeof c.logoId === 'string' && /^[0-9a-f]{32}$/.test(c.logoId) ? c.logoId : null;
+    c.logoData = typeof c.logoData === 'string' && c.logoData.startsWith('data:image/') ? c.logoData : null;
+    return c;
+  }
+  function migrateColors(o) {
+    const cost = s => String(s ?? '').replace(/[WUBRGP]/gi, ch => OLD_LETTERS[ch.toUpperCase()]);
+    const text = s => String(s ?? '').replace(/\{([^}]{1,14})\}/g, (m, t) => /^\d*d\d/i.test(t.trim()) ? m : '{' + cost(t) + '}');
+    return { ...o, v: 2, color: OLD_LETTERS[o.color] || o.color, cost: cost(o.cost), upCost: cost(o.upCost), rules: text(o.rules), flavor: text(o.flavor) };
+  }
+  const newId = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  // ---------- state ----------
+  const state = { card: sampleCard(), deck: [], touched: false, saving: false, lv: 0, filter: 'all', query: '' };
+  let db = null, downloads = null, assets = null, readOnly = false, mode = 'local';
+  const artUrls = {};
+  const cardEl = $('#card');
+
+  // ---------- rendering ----------
+  // A card copied from the online deck keeps its image inline and the online id beside it, so the inline copy wins.
+  function artSrc(c) { return c.artData || (c.artId ? (artUrls[c.artId] || '/_blob/' + c.artId) : null); }
+  function logoSrc(c) { return c.logoData || (c.logoId ? (artUrls[c.logoId] || '/_blob/' + c.logoId) : null); }
+
+  const HOME = Object.fromEntries(MEDALLIONS.map(([k], i) => [k, i]));
+  // Each element letter in the cost is one orb. An element's first orb takes its own seat, the next ones alternate
+  // clockwise then counter-clockwise outward, and it never takes the seat facing it (its opposite's).
+  // The main element seats first, then the others by size. Returns the element in each seat and how many orbs didn't fit.
+  function seatOrbs(counts, main) {
+    const seats = Array(6).fill(null);
+    let dropped = 0;
+    const order = Object.keys(counts).sort((a, b) => (b === main) - (a === main) || counts[b] - counts[a]);
+    for (const e of order) {
+      let left = counts[e];
+      for (const off of [0, 1, -1, 2, -2]) {
+        if (!left) break;
+        const s = (HOME[e] + off + 6) % 6;
+        if (!seats[s]) { seats[s] = e; left--; }
+      }
+      dropped += left;
+    }
+    return { seats, dropped };
+  }
+  function costCounts(str) {
+    const counts = {};
+    for (const p of parseCost(str).pips) if (p.c) counts[p.c] = (counts[p.c] || 0) + 1;
+    return counts;
+  }
+  function renderCard() {
+    const c = state.card, p = pal(c.color);
+    const src = artSrc(c), logo = logoSrc(c);
+    const counts = costCounts(c.cost);
+    cardEl.style.background = `var(--noise),${frameBackground(Object.keys(counts))}`;
+    const { seats, dropped } = seatOrbs(counts, c.color);
+    // The seat facing the main element shows its opposite as an outline, when no orb took it.
+    const ghostSeat = COLORS[c.color] ? (HOME[c.color] + 3) % 6 : -1;
+    const meds = MEDALLIONS.map(([k, x, y], i) => {
+      const pos = `left:${x}cqw;top:${y}cqw;`, orb = seats[i];
+      if (orb) {
+        const glow = `box-shadow:0 .6cqw 1.2cqw rgba(0,0,0,.55),0 0 0 .3cqw #0b0f18,0 0 3.2cqw ${COLORS[orb].light}aa;`;
+        return `<div class="med" style="${pos}${glow}"><div class="med-in" style="background:${COLORS[orb].med}">${symbolSVG(orb)}</div></div>`;
+      }
+      if (i === ghostSeat) return `<div class="med ghost" style="${pos}--gc:${COLORS[k].light}"><div class="med-in">${outlineSVG(k)}</div></div>`;
+      return `<div class="med off" style="${pos}"><div class="med-in" style="background:${COLORS[k].med}">${symbolSVG(k)}</div></div>`;
+    }).join('');
+    const warn = $('#costWarn');
+    warn.hidden = !dropped;
+    if (dropped) warn.textContent = `${dropped} orb${dropped === 1 ? '' : 's'} didn't fit. An element can fill at most 5 seats (never its opposite's), and only seats left free by other elements.`;
+    const valLen = s => s.length > 8 ? ' xlong' : s.length > 6 ? ' long' : '';
+    const dmgTxt = diceText(c.dmg), upTxt = diceText(c.up, true);
+    const upCost = costHTML(c.upCost);
+    // Plaques keep their slots (damage left, upcast cost middle, upcast damage right) even when a neighbor is switched off.
+    const plaques = [
+      c.hasDamage && `<div class="plaque"><div class="pv${valLen(dmgTxt)}">${c.dmg.count ? dieHTML(c.dmg.die, c.color) : ''}<span>${dmgTxt}</span></div><div class="pl">${esc(c.dmg.type ? cap(c.dmg.type) : 'Damage')}</div></div>`,
+      c.hasUpcast && `<div class="plaque"><div class="pv"><span class="pips">${upCost || '<span>—</span>'}</span></div><div class="pl">Upcast</div></div>`,
+      c.hasDamage && c.hasUpcast && `<div class="plaque"><div class="pv${valLen(upTxt)}">${c.up.count ? dieHTML(c.up.die, c.color) : ''}<span>${upTxt}</span></div><div class="pl">Per upcast</div></div>`
+    ];
+    const anyPlaque = c.hasDamage || c.hasUpcast;
+    cardEl.classList.toggle('no-plaques', !anyPlaque);
+    const artStyle = src
+      ? `background-image:url('${src}');background-position:${c.artX}% ${c.artY}%`
+      : `background:radial-gradient(circle at 50% 42%,${p.light} 0%,${p.mid} 50%,${p.dark} 100%)`;
+    cardEl.innerHTML = `
+      ${FILIGREE}
+      <div class="oval"><div class="oval-art" style="${artStyle}">${src ? '' : `<span class="art-sym">${COLORS[c.color] ? symbolSVG(c.color) : kindSVG(c.kind, '#ffffff')}</span>`}</div></div>
+      ${meds}
+      ${logo ? `<div class="setlogo" style="background-image:url('${logo}')"></div>` : ''}      <div class="parch">
+        <div class="phead"><span class="cname">${esc(c.name) || 'Untitled'}</span><span class="ctype"><i></i>${kindSVG(c.kind, '#6e4f22')}<i></i></span></div>
+        <div class="rules-area">${richText(c.rules, c.color)}</div>
+        <div class="divider"><i></i></div>
+        <div class="flavor-area">${richText(c.flavor, c.color)}</div>
+      </div>
+      ${anyPlaque ? `<div class="plaques">${plaques.map(p => p || '<div></div>').join('')}</div>` : ''}
+      ${c.artist ? `<div class="foot">Illus. ${esc(c.artist)}</div>` : ''}`;
+    fit();
+  }
+  // Long text shrinks only a little (to `min`) so it stays readable; past that the editor warns instead. Returns true when it still overflows.
+  function shrinkToFit(name, el, overflows, min) {
+    let f = 1; cardEl.style.setProperty(name, 1);
+    while (el && overflows(el) && f > min + .001) { f -= .03; cardEl.style.setProperty(name, f.toFixed(2)); }
+    return !!el && overflows(el);
+  }
+  function fit() {
+    const tall = el => el.scrollHeight > el.clientHeight + 1, wide = el => el.scrollWidth > el.clientWidth + 1;
+    const rulesOver = shrinkToFit('--fit', cardEl.querySelector('.rules-area'), tall, .82);
+    // Flavor may shrink further so two short lines still fit the fixed panel.
+    const flavorOver = shrinkToFit('--ffit', cardEl.querySelector('.flavor-area'), tall, .75);
+    shrinkToFit('--nfit', cardEl.querySelector('.cname'), wide, .6);
+    $('#rulesWarn').hidden = !rulesOver;
+    $('#flavorWarn').hidden = !flavorOver;
+  }
+
+  function buildStatic() {
+    $('#swatches').innerHTML = SWATCH_ORDER.map(k => `<button type="button" class="sw" role="radio" data-c="${k}" style="--sf:${pal(k).sw}" aria-checked="false">${elementPip(k)}<span>${pal(k).name}</span></button>`).join('');
+    $('#pickKind').innerHTML = Object.entries(KINDS).map(([k, v]) => `<button type="button" class="kp" role="radio" data-k="${k}" aria-checked="false">${kindSVG(k, 'currentColor')}<span>${v.label}</span></button>`).join('');
+    $('#fDmgT').innerHTML = DMG_TYPES.map(t => `<option value="${t}">${t ? cap(t) : 'No type (shows "Damage")'}</option>`).join('');
+    $$('.pipbar').forEach(bar => {
+      // The casting cost only lights medallions, so generic 1 and X buttons belong to the upcast cost alone.
+      const generic = bar.dataset.target === 'fCost' ? '' :
+        `<button type="button" class="pb" data-add="1" aria-label="Add one generic">${'<span class="pip"><span>1</span></span>'}</button>` +
+        `<button type="button" class="pb" data-add="X" aria-label="Add X">${'<span class="pip"><span>X</span></span>'}</button>`;
+      bar.innerHTML = ORDER.map(k => `<button type="button" class="pb" data-add="${k}" aria-label="Add ${COLORS[k].name.toLowerCase()} symbol">${pipHTML(k)}</button>`).join('') +
+        generic + `<button type="button" class="linkbtn" data-clear>Clear</button>`;
+    });
+    $('#deckChips').innerHTML = `<button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>` +
+      SWATCH_ORDER.map(k => `<button type="button" class="chip" data-filter="${k}" aria-pressed="false">${elementPip(k)}${pal(k).name}</button>`).join('');
+  }
+  function renderDiePickers() {
+    const c = state.card;
+    for (const [id, path] of [['#pickDmg', 'dmg'], ['#pickUp', 'up']]) {
+      $(id).innerHTML = DIE_SIDES.map(s => `<button type="button" class="dp" data-v="${s}" aria-pressed="${c[path].die === s}">${dieHTML(s, c.color)}d${s}</button>`).join('');
+    }
+  }
+  const getPath = (o, p) => p.split('.').reduce((a, k) => a?.[k], o);
+  function setPath(o, p, v) { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; }
+
+  function loadIntoForm() {
+    const c = state.card;
+    $$('[data-f]').forEach(el => {
+      if (el.classList.contains('diepick')) return;
+      const v = getPath(c, el.dataset.f);
+      if (el.type === 'checkbox') { el.checked = !!v; return; }
+      if (document.activeElement !== el || el.value !== String(v)) el.value = v ?? '';
+    });
+    $$('.sw').forEach(b => b.setAttribute('aria-checked', String(b.dataset.c === c.color)));
+    $$('.kp').forEach(b => b.setAttribute('aria-checked', String(b.dataset.k === c.kind)));
+    renderDiePickers();
+    $('#btnArtClear').hidden = !(c.artId || c.artData);
+    $('#btnLogoClear').hidden = !(c.logoId || c.logoData);
+    $('#fArtX').disabled = $('#fArtY').disabled = !(c.artId || c.artData);
+    syncSections();
+  }
+  function syncSections() {
+    const c = state.card;
+    $('#dmgFields').hidden = !c.hasDamage;
+    $('#dmgOffHint').hidden = c.hasDamage;
+    $('#upFields').hidden = !c.hasUpcast;
+    $('#upDice').hidden = !c.hasDamage;
+    $('#upHint').textContent = c.hasDamage
+      ? 'Each upcast adds the upcast damage once.'
+      : 'Only the upcast cost shows on this card. Describe what upcasting does in the rules text.';
+    $('.roller').hidden = !c.hasDamage;
+    $('.stepper').hidden = !c.hasUpcast;
+  }
+
+  function updateStatus(text) {
+    const st = $('#status'), c = state.card;
+    let s, t;
+    if (readOnly) { s = 'readonly'; t = 'View only'; }
+    else if (text) { s = 'saving'; t = text; }
+    else if (!c.id) { s = 'new'; t = 'Not in deck'; }
+    else if (state.saving) { s = 'saving'; t = 'Saving…'; }
+    else { s = 'saved'; t = mode === 'db' ? 'Saved to deck' : 'Saved in this browser'; }
+    st.dataset.s = s; st.textContent = t;
+    $('#btnSave').hidden = !!c.id || readOnly;
+    $('#btnDup').disabled = !c.id || readOnly;
+    $('#btnDel').disabled = !c.id || readOnly;
+    $('#btnNew').disabled = false;
+    $('#drop').hidden = $('#logoDrop').hidden = readOnly;
+  }
+
+  function deckSub(c) {
+    let s = c.hasDamage ? diceText(c.dmg) + (c.dmg.type ? ' ' + c.dmg.type : '') : (KINDS[c.kind] || KINDS.spell).label;
+    if (c.hasUpcast && c.upCost.trim()) s += ` · up ${c.upCost.toUpperCase()}${c.hasDamage ? ' ' + diceText(c.up, true) : ''}`;
+    return s;
+  }
+  function renderDeck() {
+    const q = state.query.trim().toLowerCase();
+    const list = state.deck.filter(c => (state.filter === 'all' || c.color === state.filter) &&
+      (!q || (c.name + ' ' + c.type + ' ' + c.rules).toLowerCase().includes(q)));
+    $('#deckCount').textContent = state.deck.length ? `${state.deck.length} card${state.deck.length === 1 ? '' : 's'}` : '';
+    $('#deckList').innerHTML = list.map(c => `<li><button type="button" class="deck-item" data-id="${esc(c.id)}" style="--sf:${pal(c.color).mid}" aria-current="${c.id === state.card.id}">
+      ${elementPip(c.color)}<span><span class="di-name">${esc(c.name) || 'Untitled'}</span><span class="di-sub">${esc(deckSub(c))}</span></span><span class="di-cost">${costHTML(c.cost)}</span></button></li>`).join('');
+    const empty = $('#deckEmpty');
+    if (!state.deck.length) {
+      empty.hidden = false;
+      empty.innerHTML = `<strong>No cards yet</strong>${readOnly ? 'The deck owner has not added any cards.' : 'Cards you add appear here. Press <em>Add to deck</em> to keep the card you are editing.'}`;
+    } else if (!list.length) {
+      empty.hidden = false;
+      empty.innerHTML = `<strong>No matches</strong>No cards match this search or color.`;
+    } else empty.hidden = true;
+    $('#deckNote').textContent = (mode === 'db'
+      ? 'The deck and its art are saved with this page. Export makes a single JSON file with every card and its art.'
+      : 'The deck is saved on this device only. Export makes a JSON file with every card and its art.') +
+      ' Merge adds a deck file to this deck: new cards are added, and when a card is in both, the newer edit wins.';
+  }
+
+  // ---------- storage ----------
+  // Outside claude.ai the deck lives in this browser's IndexedDB, one record per card, which has room for art.
+  // localStorage is the fallback, and a deck saved there by an older version moves over on first load.
+  const IDB = (() => {
+    let opened;
+    const open = () => opened ||= new Promise((res, rej) => {
+      const r = indexedDB.open('spellcard-forge', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('cards', { keyPath: 'id' });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+    const run = (write, fn) => open().then(d => new Promise((res, rej) => {
+      const tx = d.transaction('cards', write ? 'readwrite' : 'readonly'), req = fn(tx.objectStore('cards'));
+      tx.oncomplete = () => res(req.result); tx.onerror = tx.onabort = () => rej(tx.error);
+    }));
+    return { all: () => run(false, s => s.getAll()), put: c => run(true, s => s.put(c)), del: id => run(true, s => s.delete(id)) };
+  })();
+  let useIdb = !!window.indexedDB;
+  const fromStore = o => ({ ...normalize(o), id: o.id, updatedAt: o.updatedAt || 0 });
+  function readLS() { try { return (JSON.parse(localStorage.getItem(LS_KEY) || '[]') || []).filter(o => o && o.id); } catch { return []; } }
+  async function readLocal() {
+    if (useIdb) {
+      try {
+        let rows = await IDB.all();
+        const old = readLS();
+        if (!rows.length && old.length) {
+          for (const o of old) await IDB.put(o);
+          rows = old; try { localStorage.removeItem(LS_KEY); } catch {}
+        }
+        // Ask the browser not to clear the deck when the phone runs low on space.
+        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+        return rows.map(fromStore);
+      } catch { useIdb = false; }
+    }
+    return readLS().map(fromStore);
+  }
+  const storeFail = () => toast('This browser would not store the deck. Export it to keep a copy.');
+  function writeLS() { try { localStorage.setItem(LS_KEY, JSON.stringify(state.deck)); } catch { storeFail(); } }
+  const storeCard = c => useIdb ? IDB.put(c).catch(storeFail) : writeLS();
+  const unstoreCard = id => useIdb ? IDB.del(id).catch(storeFail) : writeLS();
+  const sortDeck = () => state.deck.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  let chain = Promise.resolve();
+  // `at` keeps the edit time a merged card already has, so the newer edit keeps winning later merges.
+  function persist(card, at) {
+    const body = clone(card); body.updatedAt = at || Date.now();
+    state.saving = true; updateStatus();
+    chain = chain.then(async () => {
+      if (readOnly) return;
+      if (db) await db.collection('cards').doc(body.id).set(body);
+      else {
+        const i = state.deck.findIndex(c => c.id === body.id);
+        if (i >= 0) state.deck[i] = body; else state.deck.push(body);
+        sortDeck(); renderDeck(); await storeCard(body);
+      }
+    }).catch(writeError).finally(() => { state.saving = false; updateStatus(); });
+    return chain;
+  }
+  function writeError(e) {
+    const code = e && e.code;
+    if (code === 'invalid_argument') { readOnly = true; toast('You can view this deck but not change it, so edits are not saved.'); }
+    else if (code === 'quota_exceeded') toast('The deck is full. Delete some cards before adding more.');
+    else toast('The card was not saved. Check your connection, then edit any field to try again.');
+  }
+  let saveTimer = 0;
+  function scheduleSave() {
+    if (!state.card.id || readOnly) return;
+    clearTimeout(saveTimer);
+    state.saving = true; updateStatus();
+    saveTimer = setTimeout(() => persist(state.card), 650);
+  }
+  function flushSave() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; if (state.card.id && !readOnly) persist(state.card); } }
+
+  // ---------- actions ----------
+  function changed() { state.touched = true; syncSections(); renderCard(); scheduleSave(); updateStatus(); }
+  function loadCard(c) {
+    flushSave();
+    state.card = normalize(clone(c)); state.card.id = c.id;
+    state.touched = false; state.lv = 0; updateLv();
+    $('#rresult').innerHTML = '<span class="rempty">Roll to check the numbers on this card.</span>';
+    loadIntoForm(); renderCard(); renderDeck(); updateStatus();
+  }
+
+  let pendingKey = null, pendingTimer = 0;
+  function guardDiscard(key, run) {
+    if (state.card.id || !state.touched || readOnly) return run();
+    if (pendingKey === key) { pendingKey = null; clearTimeout(pendingTimer); return run(); }
+    pendingKey = key; clearTimeout(pendingTimer);
+    pendingTimer = setTimeout(() => { pendingKey = null; }, 4000);
+    toast('This card is not in the deck yet. Click again to discard it, or press Add to deck.');
+  }
+
+  function addToDeck() {
+    if (readOnly) return;
+    state.card.id = newId();
+    persist(state.card).then(() => { if (!readOnly) toast(`Added "${state.card.name || 'Untitled'}" to the deck.`); });
+    renderDeck(); updateStatus();
+  }
+
+  let delArmed = 0;
+  function deleteCard() {
+    const btn = $('#btnDel');
+    if (!delArmed) {
+      btn.classList.add('armed'); btn.textContent = 'Confirm delete';
+      delArmed = setTimeout(disarm, 3500); return;
+    }
+    disarm();
+    const c = state.card, id = c.id, artId = c.artId, logoId = c.logoId;
+    clearTimeout(saveTimer); saveTimer = 0;
+    chain = chain.then(async () => {
+      if (db) await db.collection('cards').doc(id).delete();
+      else { state.deck = state.deck.filter(x => x.id !== id); renderDeck(); await unstoreCard(id); }
+      if (artId && assets && !state.deck.some(x => x.id !== id && x.artId === artId)) { try { await assets.delete(artId); } catch {} }
+      if (logoId && assets && !state.deck.some(x => x.id !== id && x.logoId === logoId)) { try { await assets.delete(logoId); } catch {} }
+      toast(`Deleted "${c.name || 'Untitled'}".`);
+    }).catch(writeError);
+    const next = state.deck.find(x => x.id !== id);
+    if (next) loadCard(next); else { state.card = blankCard(c.color); state.touched = false; loadIntoForm(); renderCard(); renderDeck(); updateStatus(); }
+  }
+  function disarm() { clearTimeout(delArmed); delArmed = 0; const b = $('#btnDel'); b.classList.remove('armed'); b.textContent = 'Delete'; }
+
+  function duplicate() {
+    flushSave();
+    const copy = clone(state.card); copy.id = newId(); copy.name = (copy.name || 'Untitled') + ' (copy)';
+    state.card = normalize(copy); state.card.id = copy.id; state.touched = false;
+    persist(state.card); loadIntoForm(); renderCard(); renderDeck(); updateStatus();
+    toast('Duplicated. You are now editing the copy.');
+  }
+
+  // ---------- art ----------
+  function loadImage(file) {
+    return new Promise((res, rej) => { const url = URL.createObjectURL(file); const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = url; });
+  }
+  function scaled(img, max) {
+    // An SVG without a set size reports 0×0; draw it at the target size.
+    const w = img.naturalWidth || max, h = img.naturalHeight || max;
+    const k = Math.min(1, max / Math.max(w, h));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    return cv;
+  }
+  async function setArt(file) {
+    if (readOnly) return;
+    if (!file || !/^image\//.test(file.type)) { toast('Choose an image file: PNG, JPG, WebP or GIF.'); return; }
+    let img;
+    try { img = await loadImage(file); } catch { toast('That image could not be opened. Try a PNG or JPG.'); return; }
+    const c = state.card;
+    $('#dropText').textContent = 'Uploading…';
+    try {
+      if (assets) {
+        const blob = await new Promise(r => scaled(img, 1200).toBlob(r, 'image/jpeg', .86));
+        const res = await assets.upload(blob, { type: 'image/jpeg' });
+        artUrls[res.id] = res.url; c.artId = res.id; c.artData = null;
+      } else throw new Error('no assets');
+    } catch (e) {
+      c.artData = scaled(img, 1000).toDataURL('image/jpeg', .82); c.artId = null;
+    }
+    $('#dropText').textContent = 'or drop an image here';
+    c.artX = 50; c.artY = 45;
+    loadIntoForm(); changed();
+  }
+  async function setLogo(file) {
+    if (readOnly) return;
+    if (!file || !/^image\//.test(file.type)) { toast('Choose an image file: PNG, WebP, SVG or JPG.'); return; }
+    let img;
+    try { img = await loadImage(file); } catch { toast('That logo could not be opened. Try a PNG.'); return; }
+    const c = state.card, cv = scaled(img, 320);
+    $('#logoText').textContent = 'Uploading…';
+    try {
+      if (!assets) throw new Error('no assets');
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      const res = await assets.upload(blob, { type: 'image/png' });
+      artUrls[res.id] = res.url; c.logoId = res.id; c.logoData = null;
+    } catch { c.logoData = cv.toDataURL('image/png'); c.logoId = null; }
+    $('#logoText').textContent = 'a PNG with a transparent background works best';
+    loadIntoForm(); changed();
+  }
+
+  // ---------- files ----------
+  async function saveFile(filename, data) {
+    if (downloads) {
+      try { await downloads.save({ filename, data }); toast(`Saved ${filename}.`); return true; }
+      catch (e) { if (e && e.code !== 'declined') toast(e && e.code === 'rate_limited' ? 'A save is already waiting for your answer.' : 'This file could not be saved here.'); return false; }
+    }
+    const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    return true;
+  }
+  const slug = s => (String(s || 'card').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'card');
+  async function exportPng() {
+    if (!window.html2canvas) { toast('The image exporter did not load. Reload the page and try again.'); return; }
+    const btn = $('#btnPng'); btn.disabled = true; btn.textContent = 'Rendering…';
+    try {
+      if (document.fonts) await document.fonts.ready;
+      const canvas = await html2canvas(cardEl, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      await saveFile(slug(state.card.name) + '.png', blob);
+    } catch { toast('The card image could not be rendered.'); }
+    btn.disabled = false; btn.textContent = 'Export PNG';
+  }
+  // Images from the page's own storage and data: URLs draw to canvas cleanly, so art is packed and unpacked through a canvas.
+  function loadImageSrc(src) {
+    return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = src; });
+  }
+  async function exportDeck() {
+    if (!state.deck.length) { toast('The deck is empty, so there is nothing to export.'); return; }
+    const btn = $('#btnExportDeck'); btn.disabled = true; btn.textContent = 'Packing art…';
+    let missing = 0;
+    const cards = [], logos = {};
+    for (const c of state.deck) {
+      const out = clone(c);
+      if (c.artId && !c.artData) {
+        try { out.artData = scaled(await loadImageSrc(artSrc(c)), 1200).toDataURL('image/jpeg', .9); }
+        catch { missing++; }
+      }
+      if (c.logoId && !c.logoData) {
+        try { out.logoData = logos[c.logoId] ||= scaled(await loadImageSrc(logoSrc(c)), 320).toDataURL('image/png'); }
+        catch { missing++; }
+      }
+      cards.push(out);
+    }
+    btn.disabled = false; btn.textContent = 'Export';
+    const ok = await saveFile('spellcard-deck.json', JSON.stringify({ app: 'spellcard-forge', version: 2, cards }, null, 2));
+    if (ok && missing) toast(`Saved the deck, but ${missing} image${missing === 1 ? '' : 's'} could not be read and ${missing === 1 ? 'was' : 'were'} left out.`);
+  }
+  // Only the online page stores images apart from the cards; on a device every image is inline.
+  async function artExists(id) {
+    if (!assets) return false;
+    if (state.deck.some(x => (x.artId === id && !x.artData) || (x.logoId === id && !x.logoData))) return true;
+    try { return (await fetch('/_blob/' + id, { method: 'HEAD' })).ok; } catch { return false; }
+  }
+  // A merged card carries its images as data: URLs. Reuse the stored copy when this page already has it, otherwise store it again.
+  // `cache` keeps one stored copy per image during a merge, so a logo shared by many cards is stored once.
+  const IMAGE_KINDS = {
+    art:  { id: 'artId',  data: 'artData',  upload: [1200, 'image/jpeg', .86], inline: [1000, 'image/jpeg', .82] },
+    logo: { id: 'logoId', data: 'logoData', upload: [320, 'image/png'],        inline: [320, 'image/png'] }
+  };
+  async function placeImage(c, kind, cache) {
+    const k = IMAGE_KINDS[kind], data = c[k.data], ref = c[k.id];
+    if (ref && await artExists(ref)) { c[k.data] = null; return; }
+    let result = cache.get(data);
+    if (!result) {
+      let img;
+      try { img = await loadImageSrc(data); } catch { c[k.id] = null; c[k.data] = null; return; }
+      if (assets) {
+        try {
+          const [max, type, q] = k.upload;
+          const blob = await new Promise(r => scaled(img, max).toBlob(r, type, q));
+          const res = await assets.upload(blob, { type });
+          artUrls[res.id] = res.url; result = { [k.id]: res.id, [k.data]: null };
+        } catch {}
+      }
+      if (!result) { const [max, type, q] = k.inline; result = { [k.id]: null, [k.data]: scaled(img, max).toDataURL(type, q) }; }
+      cache.set(data, result);
+    }
+    Object.assign(c, result);
+    // Kept inline, the image also keeps the online id it came with, so merging back online reuses the full-size copy.
+    if (!c[k.id] && !assets) c[k.id] = ref || null;
+  }
+  async function importDeck(file) {
+    if (readOnly || !file) return;
+    let cards;
+    try { const j = JSON.parse(await file.text()); cards = Array.isArray(j) ? j : j.cards; if (!Array.isArray(cards)) throw 0; }
+    catch { toast('That file is not a Spellcard Forge deck export.'); return; }
+    // An unsaved edit counts as the newest version of its card.
+    flushSave();
+    const label = $('label[for="fImport"]');
+    let added = 0, updated = 0, same = 0, current = null;
+    const cache = new Map();
+    for (const [i, raw] of cards.entries()) {
+      label.textContent = `Merging ${i + 1}/${cards.length}…`;
+      const c = normalize(raw);
+      c.id = typeof raw.id === 'string' && /^[A-Za-z0-9_-]{1,60}$/.test(raw.id) ? raw.id : newId();
+      const at = +raw.updatedAt || 0, have = state.deck.find(x => x.id === c.id);
+      if (have && (have.updatedAt || 0) >= at) { same++; continue; }
+      if (c.artData) await placeImage(c, 'art', cache);
+      if (c.logoData) await placeImage(c, 'logo', cache);
+      await persist(c, at); if (have) updated++; else added++;
+      if (c.id === state.card.id) current = c;
+    }
+    label.textContent = 'Merge';
+    if (current) loadCard(current);
+    const parts = [added && `${added} new`, updated && `${updated} updated`, same && `${same} already up to date`].filter(Boolean);
+    toast(`Merged ${cards.length} card${cards.length === 1 ? '' : 's'}: ${parts.join(', ') || 'nothing to add'}.`);
+  }
+
+  // ---------- roller ----------
+  function updateLv() { $('#lvOut').textContent = `${state.lv} upcast${state.lv === 1 ? '' : 's'}`; }
+  function roll() {
+    const c = state.card, rnd = s => 1 + Math.floor(Math.random() * s);
+    const groups = [];
+    const base = Array.from({ length: c.dmg.count }, () => rnd(c.dmg.die));
+    groups.push({ die: c.dmg.die, vals: base, bonus: c.dmg.bonus });
+    for (let i = 0; i < (c.hasUpcast ? state.lv : 0); i++) groups.push({ die: c.up.die, vals: Array.from({ length: c.up.count }, () => rnd(c.up.die)), bonus: c.up.bonus });
+    const total = Math.max(0, groups.reduce((t, g) => t + g.vals.reduce((a, b) => a + b, 0) + g.bonus, 0));
+    const parts = groups.map((g, gi) => {
+      const dice = g.vals.map(v => dieHTML(g.die, c.color, v)).join('');
+      const bonus = g.bonus ? `<span>${g.bonus > 0 ? '+' : '−'}${Math.abs(g.bonus)}</span>` : '';
+      if (!dice && !bonus) return '';
+      return (gi ? '<span class="sep">+</span>' : '') + dice + bonus;
+    }).join('');
+    const label = c.dmg.type ? (c.dmg.type === 'healing' ? 'healing' : c.dmg.type + ' damage') : 'damage';
+    $('#rresult').innerHTML = `<span class="rtotal">${total}</span><span class="rbreak">${parts || '<span>No dice on this card.</span>'}<span class="sep">${label}</span></span>`;
+  }
+
+  // ---------- toast ----------
+  let toastTimer = 0;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3400); }
+
+  // ---------- noise texture for the frame ----------
+  function makeNoise() {
+    try {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 140;
+      const ctx = cv.getContext('2d'), im = ctx.createImageData(140, 140);
+      for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() < .5 ? 0 : 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = Math.random() * 26; }
+      ctx.putImageData(im, 0, 0);
+      document.documentElement.style.setProperty('--noise', `url(${cv.toDataURL('image/png')})`);
+    } catch {}
+  }
+
+  // ---------- events ----------
+  function bind() {
+    document.addEventListener('input', e => {
+      const el = e.target;
+      if (!el.dataset || !el.dataset.f || el.classList.contains('diepick')) return;
+      if (readOnly) return;
+      let v = el.value;
+      if (el.type === 'checkbox') v = el.checked;
+      else if (el.type === 'number' || el.type === 'range') v = clamp(v, +el.min || -99, +el.max || 99, 0);
+      setPath(state.card, el.dataset.f, v);
+      changed();
+    });
+    $('#swatches').addEventListener('click', e => {
+      const b = e.target.closest('.sw'); if (!b || readOnly) return;
+      state.card.color = b.dataset.c; loadIntoForm(); changed();
+    });
+    $('#swatches').addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      const i = SWATCH_ORDER.indexOf(state.card.color) + (e.key === 'ArrowRight' ? 1 : -1);
+      state.card.color = SWATCH_ORDER[(i + SWATCH_ORDER.length) % SWATCH_ORDER.length]; loadIntoForm(); changed();
+      $(`.sw[data-c="${state.card.color}"]`).focus(); e.preventDefault();
+    });
+    $('#pickKind').addEventListener('click', e => {
+      const b = e.target.closest('.kp'); if (!b || readOnly) return;
+      state.card.kind = b.dataset.k; loadIntoForm(); changed();
+    });
+    $$('.diepick').forEach(p => p.addEventListener('click', e => {
+      const b = e.target.closest('.dp'); if (!b || readOnly) return;
+      setPath(state.card, p.dataset.f, +b.dataset.v); renderDiePickers(); changed();
+    }));
+    $$('.pipbar').forEach(bar => bar.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b || readOnly) return;
+      const input = document.getElementById(bar.dataset.target);
+      if (b.hasAttribute('data-clear')) input.value = '';
+      else {
+        const add = b.dataset.add;
+        // Merge consecutive generic numbers: "2" + "1" becomes "3".
+        const m = add === '1' && input.value.match(/^(.*?)(\d+)$/);
+        input.value = m ? m[1] + (+m[2] + 1) : (input.value + add).slice(0, 14);
+      }
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }));
+    $('#btnSave').addEventListener('click', addToDeck);
+    $('#btnNew').addEventListener('click', () => guardDiscard('new', () => {
+      flushSave();
+      const prev = state.card;
+      state.card = { ...blankCard(prev.color), logoId: prev.logoId, logoData: prev.logoData }; state.touched = false;
+      loadIntoForm(); renderCard(); renderDeck(); updateStatus(); $('#fName').focus(); $('#fName').select();
+    }));
+    $('#btnDup').addEventListener('click', duplicate);
+    $('#btnDel').addEventListener('click', deleteCard);
+    $('#btnPng').addEventListener('click', exportPng);
+    $('#btnExportDeck').addEventListener('click', exportDeck);
+    $('#fImport').addEventListener('change', e => { importDeck(e.target.files[0]); e.target.value = ''; });
+    $('#fArt').addEventListener('change', e => { setArt(e.target.files[0]); e.target.value = ''; });
+    $('#btnArtClear').addEventListener('click', () => { if (readOnly) return; state.card.artId = null; state.card.artData = null; loadIntoForm(); changed(); });
+    $('#fLogo').addEventListener('change', e => { setLogo(e.target.files[0]); e.target.value = ''; });
+    $('#btnLogoClear').addEventListener('click', () => { if (readOnly) return; state.card.logoId = null; state.card.logoData = null; loadIntoForm(); changed(); });
+    for (const [sel, handle] of [['#drop', setArt], ['#logoDrop', setLogo]]) {
+      const drop = $(sel);
+      ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, () => drop.classList.remove('over')));
+      drop.addEventListener('drop', e => { e.preventDefault(); handle(e.dataTransfer.files[0]); });
+    }
+    $('#deckList').addEventListener('click', e => {
+      const b = e.target.closest('.deck-item'); if (!b) return;
+      const c = state.deck.find(x => x.id === b.dataset.id);
+      if (c && c.id !== state.card.id) guardDiscard('load:' + c.id, () => loadCard(c));
+    });
+    $('#deckSearch').addEventListener('input', e => { state.query = e.target.value; renderDeck(); });
+    $('#deckChips').addEventListener('click', e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      state.filter = b.dataset.filter;
+      $$('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderDeck();
+    });
+    $('#lvDown').addEventListener('click', () => { state.lv = Math.max(0, state.lv - 1); updateLv(); });
+    $('#lvUp').addEventListener('click', () => { state.lv = Math.min(9, state.lv + 1); updateLv(); });
+    $('#btnRoll').addEventListener('click', roll);
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (!state.card.id) addToDeck(); else flushSave(); }
+    });
+  }
+
+  // ---------- boot ----------
+  async function boot() {
+    makeNoise(); buildStatic(); bind();
+    const top = $('.top'), setHdr = () => document.documentElement.style.setProperty('--hdr', top.offsetHeight + 'px');
+    setHdr(); if (window.ResizeObserver) new ResizeObserver(setHdr).observe(top);
+    // Re-measure the text when the card changes size, since rounding at small sizes changes what fits.
+    if (window.ResizeObserver) new ResizeObserver(() => fit()).observe($('.card-wrap'));
+    loadIntoForm(); renderCard(); renderDeck(); updateStatus(); updateLv();
+    if (document.fonts) document.fonts.ready.then(fit);
+    const openFirst = () => { if (!state.touched && !state.card.id && state.deck.length) loadCard(state.deck[0]); };
+    const useCap = window.claude && typeof window.claude.use === 'function' ? n => window.claude.use(n).catch(() => null) : null;
+    // The installable copy (index.html with a manifest) caches its files so it opens without a connection.
+    if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (!useCap) { state.deck = await readLocal(); sortDeck(); renderDeck(); openFirst(); return; }
+    const [d, dl, as, us] = await Promise.all(['db', 'downloads', 'assets', 'user'].map(useCap));
+    db = d; downloads = dl; assets = as;
+    if (us) { try { if (await us.can('data.write') === false) readOnly = true; } catch {} }
+    if (db) {
+      mode = 'db';
+      db.collection('cards').onSnapshot(snap => {
+        state.deck = snap.docs.map(doc => ({ ...normalize(doc.data()), id: doc.id, updatedAt: doc.data().updatedAt || 0 }));
+        sortDeck(); renderDeck(); openFirst();
+      }, () => toast('The deck stopped syncing. Reload the page to reconnect.'));
+    } else { state.deck = await readLocal(); sortDeck(); openFirst(); }
+    renderDeck(); updateStatus(); loadIntoForm();
+    if (readOnly) $$('.editor input, .editor textarea, .editor select, .editor button').forEach(el => el.disabled = true);
+  }
+  boot();
+})();
+</script>

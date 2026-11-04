@@ -1,0 +1,3 @@
+# Deck exports hold your cards; keep them off the public site.
+decks/
+*.json
