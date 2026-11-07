@@ -91,6 +91,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .group:last-child{border-bottom:0}
 .group h2{margin:0;font:600 11px/1 var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .group h2 small{font:500 11px/1 var(--f-mono);letter-spacing:0;text-transform:none;color:var(--accent)}
+.tierh{margin:4px 0 -4px;font:600 12px/1 var(--f-ui);color:var(--ink);display:flex;justify-content:space-between;gap:8px}
+.tierh small{font:500 11px/1 var(--f-mono);color:var(--muted)}
 .field{display:grid;gap:5px;min-width:0}
 .field>span{font-size:12px;font-weight:500;color:var(--muted)}
 input[type=text],input[type=number],input[type=search],select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
@@ -260,6 +262,56 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .pl{font:600 2.2cqw/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:#c9a45c;white-space:nowrap}
 .foot{position:absolute;left:9cqw;right:9cqw;bottom:3.7cqw;font:500 1.85cqw/1 var(--f-mono);letter-spacing:.04em;color:#8f8a7c;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* ---------- cards / tiles switch ---------- */
+.modes{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.modes button{border:0;background:none;padding:7px 14px;border-radius:7px;cursor:pointer;font:500 13px/1 var(--f-ui);color:var(--muted)}
+.modes button:hover{color:var(--ink)}
+.modes button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+body[data-mode="tiles"] .card-only{display:none!important}
+body:not([data-mode="tiles"]) .tile-only{display:none!important}
+.sw:disabled{opacity:.3;cursor:not-allowed}
+.tl-group{margin:6px 0 0;font:600 10.5px/1 var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.svc-pip{display:inline-grid;place-items:center;width:1.12em;height:1.12em;border-radius:50%;flex:none;vertical-align:middle;
+  background:radial-gradient(circle at 35% 30%,#3a4357 0%,#1b2130 70%,#10141e 100%);box-shadow:0 0 0 .07em #c9a45c,0 .06em .14em rgba(0,0,0,.5)}
+.svc-pip svg{width:62%;height:62%;display:block}
+.deck-item>.svc-pip{font-size:20px;margin-left:4px}
+
+/* ---------- the tile (sizes in cqw: 100cqw = tile width, square) ---------- */
+/* Art window on top, a name plate across its lower edge, then the base: two harvest medallions (+ on the left, − on the
+   right) around a parchment text box, or a service medallion, text box and HP plaque for settlements. */
+.tile-wrap{container-type:inline-size;width:min(100%,460px)}
+.tile{--tf:1;--tn:1;position:relative;width:100cqw;aspect-ratio:1;border-radius:3.4cqw;overflow:hidden;color:#2a1f12;font-family:var(--f-text);
+  box-shadow:0 22px 44px -16px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.3)}
+.tile-art{position:absolute;left:6.4cqw;right:6.4cqw;top:6.4cqw;height:53cqw;border-radius:2cqw;overflow:hidden;background-color:#0b0f18;background-size:cover;background-repeat:no-repeat;
+  border:.55cqw solid #b08a4a;box-shadow:0 0 0 .4cqw #0b0f18,inset 0 0 3cqw rgba(0,0,0,.6)}
+.tsym{position:absolute;left:50%;top:50%;width:22cqw;height:22cqw;transform:translate(-50%,-50%);opacity:.32}
+.tsym svg{width:100%;height:100%;display:block}
+.tile-name{position:absolute;left:13cqw;right:13cqw;top:54.6cqw;height:10.4cqw;display:grid;place-items:center;padding:0 3cqw;border-radius:1.4cqw;
+  background:var(--noise),radial-gradient(ellipse at 50% 40%,#f3e9d2 0%,#e6d6b4 70%,#d3bf96 100%);border:.55cqw solid #b08a4a;box-shadow:0 0 0 .4cqw #0b0f18,0 .8cqw 1.6cqw rgba(0,0,0,.45)}
+.tile-name span{display:block;max-width:100%;font:400 calc(5.6cqw * var(--tn))/1.3 var(--f-display);white-space:nowrap;overflow:hidden;color:#24180c}
+.tile-base{position:absolute;left:6.4cqw;right:6.4cqw;top:68cqw;bottom:6.4cqw;display:grid;grid-template-columns:19cqw minmax(0,1fr) 19cqw;gap:2.6cqw;align-items:center}
+.tside{display:grid;justify-items:center;gap:1.2cqw}
+.tmed{width:16cqw;height:16cqw;padding:1.1cqw;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff1c4 0%,#c9a04e 45%,#6e4c18 100%);box-shadow:0 .6cqw 1.2cqw rgba(0,0,0,.55),0 0 0 .3cqw #0b0f18}
+.tmed .med-in svg{width:58%;height:58%}
+.tmed.minus{width:13cqw;height:13cqw;margin-top:1.5cqw}
+.tmed.svc .med-in{background:radial-gradient(circle at 35% 30%,#3a4357 0%,#1b2130 70%,#10141e 100%)}
+.tmed.lair .med-in{background:radial-gradient(circle at 35% 30%,#7a1d1d 0%,#3a0909 70%,#160303 100%)}
+.tlab{font:700 2.5cqw/1 var(--f-ui);letter-spacing:.1em;text-transform:uppercase;color:#f3e6c4;white-space:nowrap;text-shadow:0 .2cqw .4cqw rgba(0,0,0,.6)}
+.tbox{height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:.5em;padding:1.4cqw 2.2cqw;border-radius:1.2cqw;text-align:center;
+  font-size:calc(3.5cqw * var(--tf));line-height:1.15;color:#1c140a;
+  background:var(--noise),radial-gradient(ellipse at 50% 40%,#f3e9d2 0%,#e6d6b4 70%,#d3bf96 100%);border:.45cqw solid #b08a4a;box-shadow:0 0 0 .35cqw #0b0f18,inset 0 0 2cqw rgba(110,80,30,.3)}
+.tbox p{margin:0}
+.tbox .tflav{font-style:italic;color:#4a3a22}
+.tbox .pip{width:1em;height:1em;vertical-align:-.12em}
+.tsvcs{display:flex;justify-content:center;gap:1.4cqw;font-size:5cqw}
+.thp{display:grid;place-items:center;align-content:center;gap:.8cqw;width:16cqw;height:18cqw;
+  clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);background:linear-gradient(180deg,#c9a04e 0%,#6e4c18 100%);padding:.6cqw}
+.thp-in{width:100%;height:100%;display:grid;place-items:center;align-content:center;gap:.6cqw;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);
+  background:linear-gradient(180deg,#1f2a3e 0%,#0e1420 100%);padding-bottom:3cqw}
+.thp b{font:700 5cqw/1 var(--f-ui);color:#f3e6c4;font-variant-numeric:tabular-nums}
+.thp small{font:600 2.1cqw/1 var(--f-ui);letter-spacing:.06em;color:#c9a45c;white-space:nowrap}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -268,10 +320,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M16 2 28 9v14l-12 7-12-7V9z"/><path d="M16 8l8 13H8z"/><path d="M4 9l4 12M28 9l-4 12M16 2v6M16 30l-8-9M16 30l8-9"/></svg>
     <div>
       <h1>Spellcard Forge</h1>
-      <p>Spell cards with dice damage, upcast cost and upcast damage.</p>
+      <p>Cards with dice damage for tiers I, II and III, and the board's tiles.</p>
     </div>
   </div>
-  <div class="actions">
+  <div class="modes" role="tablist" aria-label="What to edit">
+    <button type="button" role="tab" data-mode="cards" aria-selected="true">Cards</button>
+    <button type="button" role="tab" data-mode="tiles" aria-selected="false">Tiles</button>
+  </div>
+  <div class="actions tile-only">
+    <span class="status" id="tStatus" data-s="saved">Default tile</span>
+    <button class="btn" id="tReset" type="button">Reset to default</button>
+    <button class="btn" id="tPng" type="button">Export PNG</button>
+  </div>
+  <div class="actions card-only">
     <span class="status" id="status" data-s="new">Not in deck</span>
     <button class="btn" id="btnNew" type="button">New card</button>
     <button class="btn" id="btnDup" type="button">Duplicate</button>
@@ -281,8 +342,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   </div>
 </header>
 
-<main class="bench">
+<main class="bench card-only" id="cardBench">
   <section class="editor panel" aria-label="Card details">
+    <div class="group">
+      <h2>Deck <small>class, race, villain or item</small></h2>
+      <label class="field"><span>Belongs to</span><select id="fDeck" data-f="deck"></select></label>
+      <p class="hint">Which deck the card is shuffled into. The game simulation reads this, and the deck list filters by it. New cards start in the deck of the card you were editing.</p>
+    </div>
+
     <div class="group">
       <h2>Main element</h2>
       <div class="swatches" id="swatches" role="radiogroup" aria-label="Main element"></div>
@@ -320,39 +387,37 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="group">
       <h2>Text box</h2>
       <label class="field"><span>Rules text</span><textarea id="fRules" data-f="rules" rows="4"></textarea></label>
-      <p class="warn" id="rulesWarn" hidden>Too long to fit on the card. Shorten the rules text, or switch off damage and upcast for more room.</p>
+      <p class="warn" id="rulesWarn" hidden>Too long to fit on the card. Shorten the rules text, or switch off damage for more room.</p>
       <label class="field"><span>Flavor text</span><textarea id="fFlavor" data-f="flavor" rows="2"></textarea></label>
       <p class="warn" id="flavorWarn" hidden>Too long for the flavor panel. Keep flavor to about one short sentence.</p>
       <p class="hint">Type <code>{2d6}</code> for an inline die, <code>{R}</code> for a color symbol, <code>*word*</code> for italics. Long text shrinks a little to fit.</p>
     </div>
 
     <div class="group">
-      <h2>Damage <small>bottom left</small></h2>
+      <h2>Damage by tier <small>three plaques at the bottom</small></h2>
       <label class="toggle"><input type="checkbox" id="fHasDmg" data-f="hasDamage">This card deals damage</label>
       <div class="sub" id="dmgFields">
+      <h3 class="tierh">Tier I <small>hero levels 0–2</small></h3>
       <div class="row3">
         <label class="field"><span>Dice</span><input type="number" id="fDmgN" data-f="dmg.count" min="0" max="30"></label>
-        <div class="field"><span>Die</span><div class="diepick" id="pickDmg" data-f="dmg.die" role="group" aria-label="Damage die"></div></div>
+        <div class="field"><span>Die</span><div class="diepick" id="pickDmg" data-f="dmg.die" role="group" aria-label="Tier I die"></div></div>
         <label class="field"><span>Bonus</span><input type="number" id="fDmgB" data-f="dmg.bonus" min="-99" max="99"></label>
+      </div>
+      <h3 class="tierh">Tier II <small>hero levels 3–4</small></h3>
+      <div class="row3">
+        <label class="field"><span>Dice</span><input type="number" id="fT2N" data-f="tier2.count" min="0" max="30"></label>
+        <div class="field"><span>Die</span><div class="diepick" id="pickT2" data-f="tier2.die" role="group" aria-label="Tier II die"></div></div>
+        <label class="field"><span>Bonus</span><input type="number" id="fT2B" data-f="tier2.bonus" min="-99" max="99"></label>
+      </div>
+      <h3 class="tierh">Tier III <small>hero levels 5–6</small></h3>
+      <div class="row3">
+        <label class="field"><span>Dice</span><input type="number" id="fT3N" data-f="tier3.count" min="0" max="30"></label>
+        <div class="field"><span>Die</span><div class="diepick" id="pickT3" data-f="tier3.die" role="group" aria-label="Tier III die"></div></div>
+        <label class="field"><span>Bonus</span><input type="number" id="fT3B" data-f="tier3.bonus" min="-99" max="99"></label>
       </div>
       <label class="field"><span>Damage type</span><select id="fDmgT" data-f="dmg.type"></select></label>
       </div>
       <p class="hint" id="dmgOffHint">Armor, buffs and other cards without damage show only their rules and flavor text here.</p>
-    </div>
-
-    <div class="group">
-      <h2>Upcast <small>bottom middle + right</small></h2>
-      <label class="toggle"><input type="checkbox" id="fHasUp" data-f="hasUpcast">This card can be upcast</label>
-      <div class="sub" id="upFields">
-      <label class="field"><span>Upcast cost (paid each time)</span><input type="text" id="fUpCost" data-f="upCost" maxlength="14" class="mono" autocomplete="off"></label>
-      <div class="pipbar" data-target="fUpCost"></div>
-      <div class="row3" id="upDice">
-        <label class="field"><span>Dice</span><input type="number" id="fUpN" data-f="up.count" min="0" max="30"></label>
-        <div class="field"><span>Die</span><div class="diepick" id="pickUp" data-f="up.die" role="group" aria-label="Upcast die"></div></div>
-        <label class="field"><span>Bonus</span><input type="number" id="fUpB" data-f="up.bonus" min="-99" max="99"></label>
-      </div>
-      <p class="hint" id="upHint"></p>
-      </div>
     </div>
 
     <div class="group">
@@ -372,10 +437,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="stage"><div class="card-wrap"><div class="card" id="card"></div></div></div>
     <div class="roller panel">
       <h2>Test roll</h2>
-      <div class="stepper" aria-label="Number of upcasts">
-        <button type="button" id="lvDown" aria-label="One fewer upcast">&minus;</button>
-        <output id="lvOut">0 upcasts</output>
-        <button type="button" id="lvUp" aria-label="One more upcast">+</button>
+      <div class="stepper" aria-label="Tier to roll">
+        <button type="button" id="lvDown" aria-label="Lower tier">&minus;</button>
+        <output id="lvOut">Tier I</output>
+        <button type="button" id="lvUp" aria-label="Higher tier">+</button>
       </div>
       <button class="btn btn-sm" type="button" id="btnRoll">Roll damage</button>
       <div class="rresult" id="rresult" aria-live="polite"><span class="rempty">Roll to check the numbers on this card.</span></div>
@@ -386,16 +451,79 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="deck-head">
       <h2>Deck<span id="deckCount"></span></h2>
       <div class="deck-io">
-        <button class="btn btn-sm" type="button" id="btnExportDeck">Export</button>
+        <button class="btn btn-sm js-export" type="button" id="btnExportDeck">Export</button>
         <label class="btn btn-sm" for="fImport">Merge</label>
         <input type="file" id="fImport" accept="application/json,.json" hidden>
       </div>
     </div>
     <input type="search" id="deckSearch" placeholder="Search cards" aria-label="Search cards">
-    <div class="chips" id="deckChips" role="group" aria-label="Filter by color"></div>
+    <select id="deckFilter" aria-label="Filter by deck"></select>
     <ul class="deck-list" id="deckList"></ul>
     <div class="deck-empty" id="deckEmpty" hidden></div>
     <p class="deck-note" id="deckNote"></p>
+  </aside>
+</main>
+
+<main class="bench tile-only" id="tileBench">
+  <section class="editor panel" aria-label="Tile details">
+    <div class="group">
+      <h2>Tile <small id="tKind">resource tile</small></h2>
+      <label class="field"><span>Name</span><input type="text" id="tName" data-t="name" maxlength="32" autocomplete="off"></label>
+    </div>
+
+    <div class="group" id="tResGroup">
+      <h2>Harvest <small>roll a d6</small></h2>
+      <div class="field"><span>+ resource, on a roll of 4–6</span><div class="swatches" id="tPlus" role="radiogroup" aria-label="Plus resource"></div></div>
+      <div class="field"><span>− resource, on a roll of 1–3</span><div class="swatches" id="tMinus" role="radiogroup" aria-label="Minus resource"></div></div>
+      <p class="hint">The two resources must differ. When a lackey dies here the tile is desecrated and the villain picks which one it keeps.</p>
+    </div>
+
+    <div class="group" id="tSetGroup">
+      <h2>Settlement <small id="tService"></small></h2>
+      <p class="hint" id="tServiceHint"></p>
+      <div class="row">
+        <label class="field"><span>HP</span><input type="number" id="tHpBase" data-t="hpBase" min="1" max="99"></label>
+        <label class="field"><span>+ HP per hero</span><input type="number" id="tHpPer" data-t="hpPerHero" min="0" max="20"></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Art</h2>
+      <div class="drop" id="tDrop">
+        <input type="file" id="tArt" accept="image/png,image/jpeg,image/webp,image/gif">
+        <label class="btn btn-sm" for="tArt">Upload art</label>
+        <span id="tDropText">or drop an image here</span>
+        <button class="linkbtn" id="tArtClear" type="button">Remove art</button>
+      </div>
+      <div class="row">
+        <label class="field"><span>Horizontal focus</span><input type="range" id="tArtX" data-t="artX" min="0" max="100"></label>
+        <label class="field"><span>Vertical focus</span><input type="range" id="tArtY" data-t="artY" min="0" max="100"></label>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Text box</h2>
+      <label class="field"><span>Rules text</span><textarea id="tRules" data-t="rules" rows="3"></textarea></label>
+      <label class="field"><span>Flavor text</span><textarea id="tFlavor" data-t="flavor" rows="2"></textarea></label>
+      <p class="warn" id="tTextWarn" hidden>Too long to fit on the tile. Shorten the rules or flavor text.</p>
+      <p class="hint">Type <code>{R}</code> for a color symbol and <code>*word*</code> for italics. The simulation reads the elements, services and HP, not this text.</p>
+    </div>
+  </section>
+
+  <section class="preview" aria-label="Tile preview">
+    <div class="stage"><div class="tile-wrap"><div class="tile" id="tile"></div></div></div>
+  </section>
+
+  <aside class="deck panel" aria-label="Tiles">
+    <div class="deck-head">
+      <h2>Tiles<span id="tileCount"></span></h2>
+      <div class="deck-io">
+        <button class="btn btn-sm js-export" type="button" id="btnExportTiles">Export</button>
+        <label class="btn btn-sm" for="fImport">Merge</label>
+      </div>
+    </div>
+    <ul class="deck-list" id="tileList"></ul>
+    <p class="deck-note" id="tileNote"></p>
   </aside>
 </main>
 
@@ -472,7 +600,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     rare:     { label: 'Rare',     letter: 'R', gem: '#d9ae3c' },
     mythic:   { label: 'Mythic',   letter: 'M', gem: '#e5582a' }
   };
-  const DMG_TYPES = ['', 'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder', 'healing'];
+  // Decks a card can belong to. The value is what the game simulation reads ("class:wizard").
+  const DECK_GROUPS = [
+    ['Classes', 'class', ['Wizard', 'Warlock', 'Barbarian', 'Cleric', 'Druid', 'Shaman', 'Paladin', 'Monk']],
+    ['Races', 'race', ['Elf', 'Dwarf', 'Human', 'Orc', 'Robot', 'Dragonborn']],
+    ['Villains', 'villain', ['Lich']],
+    ['Lackeys', 'lackey', ['Lich']],
+    ['Items', 'item', ['Weapon', 'Armor', 'Consumable']]
+  ];
+  const DECKS = { '': 'No deck' };
+  for (const [g, pre, names] of DECK_GROUPS) for (const n of names) DECKS[`${pre}:${n.toLowerCase()}`] = pre === 'lackey' ? `${n} lackey` : n;
+  const deckLabel = v => DECKS[v] || v || 'No deck';
+  const TIER_NAMES = ['Tier I', 'Tier II', 'Tier III'];
+  const DMG_TYPES = ['', 'acid','bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder', 'healing'];
   const LS_KEY = 'spellcard-forge.deck.v1';
 
   const SUN = (() => {
@@ -580,16 +720,16 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       v: 2, id: null, name: 'Skyhorn Flare', color: 'R', cost: '2R', type: 'Spell — Evocation', rarity: 'uncommon',
       rules: 'Hurl a beam of lighthouse light at a creature you can see within 60 feet. It takes {2d6} radiant damage and sheds bright light until the start of your next turn.',
       flavor: '"The lamp never goes out. It only changes hands."',
-      kind: 'spell', hasDamage: true, hasUpcast: true,
-      dmg: { count: 2, die: 6, bonus: 0, type: 'radiant' }, upCost: '1R', up: { count: 1, die: 6, bonus: 0 },
+      kind: 'spell', deck: 'class:cleric', hasDamage: true,
+      dmg: { count: 2, die: 6, bonus: 0, type: 'radiant' }, tier2: { count: 4, die: 6, bonus: 0 }, tier3: { count: 6, die: 6, bonus: 0 },
       artist: '', number: '001', artId: null, artData: null, artX: 50, artY: 40, logoId: null, logoData: null
     };
   }
   function blankCard(color = 'R') {
     return {
       v: 2, id: null, name: 'New card', color, cost: color, type: 'Spell', rarity: 'common', rules: '', flavor: '',
-      kind: 'spell', hasDamage: true, hasUpcast: false,
-      dmg: { count: 1, die: 6, bonus: 0, type: '' }, upCost: '', up: { count: 0, die: 6, bonus: 0 },
+      kind: 'spell', deck: '', hasDamage: true,
+      dmg: { count: 1, die: 6, bonus: 0, type: '' }, tier2: { count: 3, die: 6, bonus: 0 }, tier3: { count: 5, die: 6, bonus: 0 },
       artist: '', number: '', artId: null, artData: null, artX: 50, artY: 50, logoId: null, logoData: null
     };
   }
@@ -598,18 +738,34 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     o = o && typeof o === 'object' ? o : {};
     if (o.v !== 2) o = migrateColors(o);
     const b = blankCard();
-    const c = { ...b, ...o, dmg: { ...b.dmg, ...(o.dmg || {}) }, up: { ...b.up, ...(o.up || {}) } };
+    const c = { ...b, ...o, dmg: { ...b.dmg, ...(o.dmg || {}) }, tier2: { ...b.tier2, ...(o.tier2 || {}) }, tier3: { ...b.tier3, ...(o.tier3 || {}) } };
     if (c.color !== '' && !COLORS[c.color]) c.color = 'R';
     if (!RARITY[c.rarity]) c.rarity = 'common';
-    for (const k of ['name', 'cost', 'type', 'rules', 'flavor', 'upCost', 'artist', 'number']) c[k] = String(c[k] ?? '');
-    for (const d of [c.dmg, c.up]) {
+    for (const k of ['name', 'cost', 'type', 'rules', 'flavor', 'artist', 'number', 'deck']) c[k] = String(c[k] ?? '');
+    const dice = d => {
       d.count = clamp(d.count, 0, 30, 0); d.bonus = clamp(d.bonus, -99, 99, 0);
       d.die = DIE_SIDES.includes(+d.die) ? +d.die : 6;
+      return d;
+    };
+    dice(c.dmg);
+    // Cards made before tiers had an upcast instead. Tier II gets the base plus one upcast, tier III plus two.
+    // Without an upcast all three tiers start equal to the old damage, ready to be edited.
+    if (!o.tier2 || !o.tier3) {
+      const up = dice({ count: 0, die: 6, bonus: 0, ...(o.up || {}) });
+      const hadUp = (typeof o.hasUpcast === 'boolean' ? o.hasUpcast : !!String(o.upCost ?? '').trim()) && (up.count || up.bonus);
+      const plus = k => ({
+        count: c.dmg.count + (hadUp ? k * up.count : 0),
+        die: c.dmg.count ? c.dmg.die : (hadUp && up.count ? up.die : c.dmg.die),
+        bonus: c.dmg.bonus + (hadUp ? k * up.bonus : 0)
+      });
+      if (!o.tier2) c.tier2 = plus(1);
+      if (!o.tier3) c.tier3 = plus(2);
     }
+    dice(c.tier2); dice(c.tier3);
+    delete c.up; delete c.upCost; delete c.hasUpcast;
     c.dmg.type = DMG_TYPES.includes(c.dmg.type) ? c.dmg.type : '';
-    // Cards saved before the switches existed always showed damage, and showed upcast when they had a cost.
+    // Cards saved before the switch existed always showed damage.
     c.hasDamage = typeof o.hasDamage === 'boolean' ? o.hasDamage : true;
-    c.hasUpcast = typeof o.hasUpcast === 'boolean' ? o.hasUpcast : !!c.upCost.trim();
     // Cards made before type icons existed get a type guessed from their old type line.
     if (!KINDS[o.kind]) {
       const t = c.type.toLowerCase();
@@ -626,13 +782,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   function migrateColors(o) {
     const cost = s => String(s ?? '').replace(/[WUBRGP]/gi, ch => OLD_LETTERS[ch.toUpperCase()]);
     const text = s => String(s ?? '').replace(/\{([^}]{1,14})\}/g, (m, t) => /^\d*d\d/i.test(t.trim()) ? m : '{' + cost(t) + '}');
-    return { ...o, v: 2, color: OLD_LETTERS[o.color] || o.color, cost: cost(o.cost), upCost: cost(o.upCost), rules: text(o.rules), flavor: text(o.flavor) };
+    return { ...o, v: 2, color: OLD_LETTERS[o.color] || o.color, cost: cost(o.cost), rules: text(o.rules), flavor: text(o.flavor) };
   }
   const newId = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const clone = o => JSON.parse(JSON.stringify(o));
 
   // ---------- state ----------
-  const state = { card: sampleCard(), deck: [], touched: false, saving: false, lv: 0, filter: 'all', query: '' };
+  const state = { card: sampleCard(), deck: [], touched: false, saving: false, lv: 1, filter: 'all', query: '' };
   let db = null, downloads = null, assets = null, readOnly = false, mode = 'local';
   const artUrls = {};
   const cardEl = $('#card');
@@ -666,6 +822,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     for (const p of parseCost(str).pips) if (p.c) counts[p.c] = (counts[p.c] || 0) + 1;
     return counts;
   }
+  const tierDice = c => [c.dmg, c.tier2, c.tier3];
   function renderCard() {
     const c = state.card, p = pal(c.color);
     const src = artSrc(c), logo = logoSrc(c);
@@ -687,15 +844,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     warn.hidden = !dropped;
     if (dropped) warn.textContent = `${dropped} orb${dropped === 1 ? '' : 's'} didn't fit. An element can fill at most 5 seats (never its opposite's), and only seats left free by other elements.`;
     const valLen = s => s.length > 8 ? ' xlong' : s.length > 6 ? ' long' : '';
-    const dmgTxt = diceText(c.dmg), upTxt = diceText(c.up, true);
-    const upCost = costHTML(c.upCost);
-    // Plaques keep their slots (damage left, upcast cost middle, upcast damage right) even when a neighbor is switched off.
-    const plaques = [
-      c.hasDamage && `<div class="plaque"><div class="pv${valLen(dmgTxt)}">${c.dmg.count ? dieHTML(c.dmg.die, c.color) : ''}<span>${dmgTxt}</span></div><div class="pl">${esc(c.dmg.type ? cap(c.dmg.type) : 'Damage')}</div></div>`,
-      c.hasUpcast && `<div class="plaque"><div class="pv"><span class="pips">${upCost || '<span>—</span>'}</span></div><div class="pl">Upcast</div></div>`,
-      c.hasDamage && c.hasUpcast && `<div class="plaque"><div class="pv${valLen(upTxt)}">${c.up.count ? dieHTML(c.up.die, c.color) : ''}<span>${upTxt}</span></div><div class="pl">Per upcast</div></div>`
-    ];
-    const anyPlaque = c.hasDamage || c.hasUpcast;
+    // One plaque per tier: I left, II middle, III right.
+    const plaques = c.hasDamage ? tierDice(c).map((d, i) => {
+      const t = diceText(d);
+      return `<div class="plaque"><div class="pv${valLen(t)}">${d.count ? dieHTML(d.die, c.color) : ''}<span>${t}</span></div><div class="pl">${TIER_NAMES[i]}</div></div>`;
+    }) : [];
+    const anyPlaque = c.hasDamage;
     cardEl.classList.toggle('no-plaques', !anyPlaque);
     const artStyle = src
       ? `background-image:url('${src}');background-position:${c.artX}% ${c.artY}%`
@@ -734,20 +888,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     $('#swatches').innerHTML = SWATCH_ORDER.map(k => `<button type="button" class="sw" role="radio" data-c="${k}" style="--sf:${pal(k).sw}" aria-checked="false">${elementPip(k)}<span>${pal(k).name}</span></button>`).join('');
     $('#pickKind').innerHTML = Object.entries(KINDS).map(([k, v]) => `<button type="button" class="kp" role="radio" data-k="${k}" aria-checked="false">${kindSVG(k, 'currentColor')}<span>${v.label}</span></button>`).join('');
     $('#fDmgT').innerHTML = DMG_TYPES.map(t => `<option value="${t}">${t ? cap(t) : 'No type (shows "Damage")'}</option>`).join('');
+    // The casting cost only lights medallions, so it has no generic 1 or X buttons.
     $$('.pipbar').forEach(bar => {
-      // The casting cost only lights medallions, so generic 1 and X buttons belong to the upcast cost alone.
-      const generic = bar.dataset.target === 'fCost' ? '' :
-        `<button type="button" class="pb" data-add="1" aria-label="Add one generic">${'<span class="pip"><span>1</span></span>'}</button>` +
-        `<button type="button" class="pb" data-add="X" aria-label="Add X">${'<span class="pip"><span>X</span></span>'}</button>`;
       bar.innerHTML = ORDER.map(k => `<button type="button" class="pb" data-add="${k}" aria-label="Add ${COLORS[k].name.toLowerCase()} symbol">${pipHTML(k)}</button>`).join('') +
-        generic + `<button type="button" class="linkbtn" data-clear>Clear</button>`;
+        `<button type="button" class="linkbtn" data-clear>Clear</button>`;
     });
-    $('#deckChips').innerHTML = `<button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>` +
-      SWATCH_ORDER.map(k => `<button type="button" class="chip" data-filter="${k}" aria-pressed="false">${elementPip(k)}${pal(k).name}</button>`).join('');
+    $('#fDeck').innerHTML = `<option value="">No deck</option>` + DECK_GROUPS.map(([g, pre, names]) =>
+      `<optgroup label="${g}">${names.map(n => `<option value="${pre}:${n.toLowerCase()}">${esc(deckLabel(`${pre}:${n.toLowerCase()}`))}</option>`).join('')}</optgroup>`).join('');
   }
   function renderDiePickers() {
     const c = state.card;
-    for (const [id, path] of [['#pickDmg', 'dmg'], ['#pickUp', 'up']]) {
+    for (const [id, path] of [['#pickDmg', 'dmg'], ['#pickT2', 'tier2'], ['#pickT3', 'tier3']]) {
       $(id).innerHTML = DIE_SIDES.map(s => `<button type="button" class="dp" data-v="${s}" aria-pressed="${c[path].die === s}">${dieHTML(s, c.color)}d${s}</button>`).join('');
     }
   }
@@ -774,13 +925,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const c = state.card;
     $('#dmgFields').hidden = !c.hasDamage;
     $('#dmgOffHint').hidden = c.hasDamage;
-    $('#upFields').hidden = !c.hasUpcast;
-    $('#upDice').hidden = !c.hasDamage;
-    $('#upHint').textContent = c.hasDamage
-      ? 'Each upcast adds the upcast damage once.'
-      : 'Only the upcast cost shows on this card. Describe what upcasting does in the rules text.';
     $('.roller').hidden = !c.hasDamage;
-    $('.stepper').hidden = !c.hasUpcast;
   }
 
   function updateStatus(text) {
@@ -800,14 +945,23 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   }
 
   function deckSub(c) {
-    let s = c.hasDamage ? diceText(c.dmg) + (c.dmg.type ? ' ' + c.dmg.type : '') : (KINDS[c.kind] || KINDS.spell).label;
-    if (c.hasUpcast && c.upCost.trim()) s += ` · up ${c.upCost.toUpperCase()}${c.hasDamage ? ' ' + diceText(c.up, true) : ''}`;
-    return s;
+    const what = c.hasDamage ? tierDice(c).map(d => diceText(d)).join(' / ') + (c.dmg.type ? ' ' + c.dmg.type : '') : (KINDS[c.kind] || KINDS.spell).label;
+    return `${deckLabel(c.deck)} · ${what}`;
+  }
+  function renderDeckFilter() {
+    const counts = {};
+    for (const c of state.deck) counts[c.deck] = (counts[c.deck] || 0) + 1;
+    if (state.filter !== 'all' && !counts[state.filter]) state.filter = 'all';
+    const keys = Object.keys(DECKS).filter(k => counts[k]).concat(Object.keys(counts).filter(k => !(k in DECKS)));
+    $('#deckFilter').innerHTML = `<option value="all">All decks</option>` +
+      keys.map(k => `<option value="${esc(k)}">${esc(deckLabel(k))} (${counts[k]})</option>`).join('');
+    $('#deckFilter').value = state.filter;
   }
   function renderDeck() {
+    renderDeckFilter();
     const q = state.query.trim().toLowerCase();
-    const list = state.deck.filter(c => (state.filter === 'all' || c.color === state.filter) &&
-      (!q || (c.name + ' ' + c.type + ' ' + c.rules).toLowerCase().includes(q)));
+    const list = state.deck.filter(c => (state.filter === 'all' || c.deck === state.filter) &&
+      (!q || (c.name + ' ' + c.type + ' ' + c.rules + ' ' + deckLabel(c.deck)).toLowerCase().includes(q)));
     $('#deckCount').textContent = state.deck.length ? `${state.deck.length} card${state.deck.length === 1 ? '' : 's'}` : '';
     $('#deckList').innerHTML = list.map(c => `<li><button type="button" class="deck-item" data-id="${esc(c.id)}" style="--sf:${pal(c.color).mid}" aria-current="${c.id === state.card.id}">
       ${elementPip(c.color)}<span><span class="di-name">${esc(c.name) || 'Untitled'}</span><span class="di-sub">${esc(deckSub(c))}</span></span><span class="di-cost">${costHTML(c.cost)}</span></button></li>`).join('');
@@ -817,11 +971,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       empty.innerHTML = `<strong>No cards yet</strong>${readOnly ? 'The deck owner has not added any cards.' : 'Cards you add appear here. Press <em>Add to deck</em> to keep the card you are editing.'}`;
     } else if (!list.length) {
       empty.hidden = false;
-      empty.innerHTML = `<strong>No matches</strong>No cards match this search or color.`;
+      empty.innerHTML = `<strong>No matches</strong>No cards match this search or deck.`;
     } else empty.hidden = true;
     $('#deckNote').textContent = (mode === 'db'
-      ? 'The deck and its art are saved with this page. Export makes a single JSON file with every card and its art.'
-      : 'The deck is saved on this device only. Export makes a JSON file with every card and its art.') +
+      ? 'The deck and its art are saved with this page. Export makes a single JSON file with every card, the 24 tiles and their art.'
+      : 'The deck is saved on this device only. Export makes a JSON file with every card, the 24 tiles and their art.') +
       ' Merge adds a deck file to this deck: new cards are added, and when a card is in both, the newer edit wins.';
   }
 
@@ -830,16 +984,24 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   // localStorage is the fallback, and a deck saved there by an older version moves over on first load.
   const IDB = (() => {
     let opened;
+    // Version 2 added the tiles store next to the cards store.
     const open = () => opened ||= new Promise((res, rej) => {
-      const r = indexedDB.open('spellcard-forge', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('cards', { keyPath: 'id' });
+      const r = indexedDB.open('spellcard-forge', 2);
+      r.onupgradeneeded = () => {
+        for (const name of ['cards', 'tiles'])
+          if (!r.result.objectStoreNames.contains(name)) r.result.createObjectStore(name, { keyPath: 'id' });
+      };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     });
-    const run = (write, fn) => open().then(d => new Promise((res, rej) => {
-      const tx = d.transaction('cards', write ? 'readwrite' : 'readonly'), req = fn(tx.objectStore('cards'));
+    const run = (store, write, fn) => open().then(d => new Promise((res, rej) => {
+      const tx = d.transaction(store, write ? 'readwrite' : 'readonly'), req = fn(tx.objectStore(store));
       tx.oncomplete = () => res(req.result); tx.onerror = tx.onabort = () => rej(tx.error);
     }));
-    return { all: () => run(false, s => s.getAll()), put: c => run(true, s => s.put(c)), del: id => run(true, s => s.delete(id)) };
+    return {
+      all: (store = 'cards') => run(store, false, s => s.getAll()),
+      put: (c, store = 'cards') => run(store, true, s => s.put(c)),
+      del: (id, store = 'cards') => run(store, true, s => s.delete(id))
+    };
   })();
   let useIdb = !!window.indexedDB;
   const fromStore = o => ({ ...normalize(o), id: o.id, updatedAt: o.updatedAt || 0 });
@@ -902,7 +1064,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   function loadCard(c) {
     flushSave();
     state.card = normalize(clone(c)); state.card.id = c.id;
-    state.touched = false; state.lv = 0; updateLv();
+    state.touched = false; state.lv = 1; updateLv();
     $('#rresult').innerHTML = '<span class="rempty">Roll to check the numbers on this card.</span>';
     loadIntoForm(); renderCard(); renderDeck(); updateStatus();
   }
@@ -941,7 +1103,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       toast(`Deleted "${c.name || 'Untitled'}".`);
     }).catch(writeError);
     const next = state.deck.find(x => x.id !== id);
-    if (next) loadCard(next); else { state.card = blankCard(c.color); state.touched = false; loadIntoForm(); renderCard(); renderDeck(); updateStatus(); }
+    if (next) loadCard(next); else { state.card = { ...blankCard(c.color), deck: c.deck }; state.touched = false; loadIntoForm(); renderCard(); renderDeck(); updateStatus(); }
   }
   function disarm() { clearTimeout(delArmed); delArmed = 0; const b = $('#btnDel'); b.classList.remove('armed'); b.textContent = 'Delete'; }
 
@@ -1030,11 +1192,20 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   function loadImageSrc(src) {
     return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = src; });
   }
+  // One file holds the cards and all 24 tiles, so a single export carries both to the game simulation.
   async function exportDeck() {
-    if (!state.deck.length) { toast('The deck is empty, so there is nothing to export.'); return; }
-    const btn = $('#btnExportDeck'); btn.disabled = true; btn.textContent = 'Packing art…';
+    const btns = $$('.js-export');
+    btns.forEach(b => { b.disabled = true; b.textContent = 'Packing art…'; });
     let missing = 0;
-    const cards = [], logos = {};
+    const cards = [], logos = {}, tiles = [];
+    for (const t of state.tiles) {
+      const out = clone(t);
+      if (t.artId && !t.artData) {
+        try { out.artData = scaled(await loadImageSrc(artSrc(t)), 1200).toDataURL('image/jpeg', .9); }
+        catch { missing++; }
+      }
+      tiles.push(out);
+    }
     for (const c of state.deck) {
       const out = clone(c);
       if (c.artId && !c.artData) {
@@ -1047,8 +1218,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       }
       cards.push(out);
     }
-    btn.disabled = false; btn.textContent = 'Export';
-    const ok = await saveFile('spellcard-deck.json', JSON.stringify({ app: 'spellcard-forge', version: 2, cards }, null, 2));
+    btns.forEach(b => { b.disabled = false; b.textContent = 'Export'; });
+    const ok = await saveFile('spellcard-deck.json', JSON.stringify({ app: 'spellcard-forge', version: 2, cards, tiles }, null, 2));
     if (ok && missing) toast(`Saved the deck, but ${missing} image${missing === 1 ? '' : 's'} could not be read and ${missing === 1 ? 'was' : 'were'} left out.`);
   }
   // Only the online page stores images apart from the cards; on a device every image is inline.
@@ -1087,8 +1258,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   }
   async function importDeck(file) {
     if (readOnly || !file) return;
-    let cards;
-    try { const j = JSON.parse(await file.text()); cards = Array.isArray(j) ? j : j.cards; if (!Array.isArray(cards)) throw 0; }
+    let cards, tiles;
+    try {
+      const j = JSON.parse(await file.text());
+      cards = Array.isArray(j) ? j : j.cards; tiles = Array.isArray(j) ? [] : j.tiles;
+      if (!Array.isArray(cards) && !Array.isArray(tiles)) throw 0;
+      cards = cards || []; tiles = Array.isArray(tiles) ? tiles : [];
+    }
     catch { toast('That file is not a Spellcard Forge deck export.'); return; }
     // An unsaved edit counts as the newest version of its card.
     flushSave();
@@ -1106,20 +1282,31 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       await persist(c, at); if (have) updated++; else added++;
       if (c.id === state.card.id) current = c;
     }
+    // Tiles: a known tile id replaces the one here when its edit is newer.
+    let tilesUpdated = 0;
+    flushTileSave();
+    for (const raw of tiles) {
+      if (!raw || !TILE_BY_ID[raw.id]) continue;
+      const at = +raw.updatedAt || 0, have = state.tiles.find(x => x.id === raw.id);
+      if ((have.updatedAt || 0) >= at) continue;
+      const t = normTile(raw);
+      if (t.artData) await placeImage(t, 'art', cache);
+      await persistTile(t, at); tilesUpdated++;
+      if (t.id === state.tile.id) loadTile(t.id);
+    }
     label.textContent = 'Merge';
     if (current) loadCard(current);
     const parts = [added && `${added} new`, updated && `${updated} updated`, same && `${same} already up to date`].filter(Boolean);
-    toast(`Merged ${cards.length} card${cards.length === 1 ? '' : 's'}: ${parts.join(', ') || 'nothing to add'}.`);
+    const tilePart = tiles.length ? ` Tiles: ${tilesUpdated ? `${tilesUpdated} updated` : 'already up to date'}.` : '';
+    toast(`Merged ${cards.length} card${cards.length === 1 ? '' : 's'}: ${parts.join(', ') || 'nothing to add'}.${tilePart}`);
   }
 
   // ---------- roller ----------
-  function updateLv() { $('#lvOut').textContent = `${state.lv} upcast${state.lv === 1 ? '' : 's'}`; }
+  function updateLv() { $('#lvOut').textContent = TIER_NAMES[state.lv - 1]; }
   function roll() {
     const c = state.card, rnd = s => 1 + Math.floor(Math.random() * s);
-    const groups = [];
-    const base = Array.from({ length: c.dmg.count }, () => rnd(c.dmg.die));
-    groups.push({ die: c.dmg.die, vals: base, bonus: c.dmg.bonus });
-    for (let i = 0; i < (c.hasUpcast ? state.lv : 0); i++) groups.push({ die: c.up.die, vals: Array.from({ length: c.up.count }, () => rnd(c.up.die)), bonus: c.up.bonus });
+    const d = tierDice(c)[state.lv - 1];
+    const groups = [{ die: d.die, vals: Array.from({ length: d.count }, () => rnd(d.die)), bonus: d.bonus }];
     const total = Math.max(0, groups.reduce((t, g) => t + g.vals.reduce((a, b) => a + b, 0) + g.bonus, 0));
     const parts = groups.map((g, gi) => {
       const dice = g.vals.map(v => dieHTML(g.die, c.color, v)).join('');
@@ -1129,6 +1316,313 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     }).join('');
     const label = c.dmg.type ? (c.dmg.type === 'healing' ? 'healing' : c.dmg.type + ' damage') : 'damage';
     $('#rresult').innerHTML = `<span class="rtotal">${total}</span><span class="rbreak">${parts || '<span>No dice on this card.</span>'}<span class="sep">${label}</span></span>`;
+  }
+
+  // ---------- tiles ----------
+  // The board is 24 tiles (GDD 3.1): 18 resource tiles, 4 villages (one per crafting service), the city and the lair.
+  // The set is fixed: tiles are edited, never added or deleted, and a tile with no saved edit shows its default.
+  const SERVICES = {
+    weapon:     { label: 'Weapons',     icon: '<path d="M21 3v3L10.6 16.4l-3-3L18 3z"/><path d="M4.6 12.2l1.4-1.4 7.2 7.2-1.4 1.4z"/><path d="M6.6 16l1.4 1.4-3.6 3.6L3 19.6z"/>',
+                  text: 'Craft one item from the face-up Weapon row.' },
+    armor:      { label: 'Armor',       icon: '<path d="M12 2 20 5v6.2c0 5.1-3.4 9.1-8 10.8-4.6-1.7-8-5.7-8-10.8V5z"/>',
+                  text: 'Craft one item from the face-up Armor row.' },
+    training:   { label: 'Training',    icon: '<path d="M2.5 5.2c3.2-1.3 6.4-1.1 8.7.7v14.4c-2.4-1.6-5.5-1.7-8.7-.5z"/><path d="M21.5 5.2c-3.2-1.3-6.4-1.1-8.7.7v14.4c2.4-1.6 5.5-1.7 8.7-.5z"/>',
+                  text: 'Train: gain a class for 3 resources, or spend XP to level up.' },
+    consumable: { label: 'Consumables', icon: KINDS.item.icon,
+                  text: 'Craft one item from the face-up Consumable row.' }
+  };
+  const TILE_ICONS = {
+    city: '<path d="M3 21V10.5l3-2.2V4.5h2.2v2.2h1.6V3h4.4v3.7h1.6V4.5H18v3.8l3 2.2V21h-6.6v-4.4a2.4 2.4 0 0 0-4.8 0V21z"/>',
+    lair: '<path d="M12 2.5c-4.7 0-8.3 3.4-8.3 7.8 0 2.6 1.2 4.6 3.1 5.9V19h2.4v2.4h1.6V19h2.4v2.4h1.6V19h2.4v-2.8c1.9-1.3 3.1-3.3 3.1-5.9 0-4.4-3.6-7.8-8.3-7.8z"/><circle cx="8.7" cy="11" r="2.1" fill="#2a0707"/><circle cx="15.3" cy="11" r="2.1" fill="#2a0707"/><path d="M12 13.2l1.2 2.4h-2.4z" fill="#2a0707"/>'
+  };
+  const iconSVG = (body, fill = '#f3e6c4') => `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true">${body}</svg>`;
+  const svcPip = svc => `<span class="svc-pip">${iconSVG(SERVICES[svc] ? SERVICES[svc].icon : TILE_ICONS[svc])}</span>`;
+
+  // Each element is the + resource on three tiles and the − resource on three others, never paired with itself or its opposite.
+  const RESOURCE_DEFAULTS = [
+    ['R', 'C', 'Sunlit Meadow'], ['R', 'V', 'Golden Field'], ['R', 'A', 'Holy Shrine'],
+    ['D', 'V', 'Blighted Marsh'], ['D', 'A', 'Cursed Ruins'], ['D', 'N', 'Ashen Waste'],
+    ['C', 'A', 'Still Lake'], ['C', 'N', 'Misty Valley'], ['C', 'R', 'Quiet Hills'],
+    ['V', 'N', 'Old Battlefield'], ['V', 'R', 'Volcanic Ridge'], ['V', 'D', 'Thornwaste'],
+    ['A', 'R', 'Crystal Cave'], ['A', 'D', 'Ley Line Peak'], ['A', 'C', 'Arcane Spire'],
+    ['N', 'D', 'Forest'], ['N', 'C', 'Wild Thicket'], ['N', 'V', 'Mushroom Grove']
+  ];
+  const TILE_BASE = { v: 1, plus: '', minus: '', service: '', hpBase: 0, hpPerHero: 0, rules: '', flavor: '', artId: null, artData: null, artX: 50, artY: 50, updatedAt: 0 };
+  const TILE_DEFAULTS = [
+    { ...TILE_BASE, id: 'tile-city', kind: 'city', name: 'Highcrown City', hpBase: 12, hpPerHero: 3,
+      rules: 'Offers all four services. Can\'t be damaged while any village stands. Any number of heroes can stand here.' },
+    { ...TILE_BASE, id: 'tile-lair', kind: 'lair', name: 'Villain\'s Lair',
+      rules: 'Lackeys rise here. Assault the villain here once no lackey stands on it.' },
+    ...[['weapon', 'Anvil Hollow'], ['armor', 'Shieldwall'], ['training', 'Sage\'s Rest'], ['consumable', 'Herbmarket']].map(([svc, name]) =>
+      ({ ...TILE_BASE, id: 'tile-village-' + svc, kind: 'village', service: svc, name, hpBase: 8, hpPerHero: 2, rules: SERVICES[svc].text })),
+    ...RESOURCE_DEFAULTS.map(([plus, minus, name], i) =>
+      ({ ...TILE_BASE, id: 'tile-res-' + String(i + 1).padStart(2, '0'), kind: 'resource', plus, minus, name }))
+  ];
+  const TILE_BY_ID = Object.fromEntries(TILE_DEFAULTS.map(t => [t.id, t]));
+  const TILE_KIND_LABEL = { resource: 'resource tile', village: 'village', city: 'city', lair: 'villain lair' };
+  const TILE_LS_KEY = 'spellcard-forge.tiles.v1';
+  const tileEl = $('#tile');
+  state.tiles = TILE_DEFAULTS.map(clone);
+  state.tile = clone(TILE_DEFAULTS[0]);
+
+  // Fills in anything a stored or merged tile is missing; its id fixes its kind and service.
+  function normTile(o) {
+    o = o && typeof o === 'object' ? o : {};
+    const d = TILE_BY_ID[o.id] || TILE_DEFAULTS[0];
+    const t = { ...d, ...o, id: d.id, kind: d.kind, service: d.service };
+    for (const k of ['name', 'rules', 'flavor']) t[k] = String(t[k] ?? '');
+    if (t.kind === 'resource') {
+      if (!COLORS[t.plus]) t.plus = d.plus;
+      if (!COLORS[t.minus] || t.minus === t.plus) t.minus = d.minus !== t.plus ? d.minus : ORDER.find(k => k !== t.plus);
+    } else { t.plus = ''; t.minus = ''; }
+    const settlement = t.kind === 'village' || t.kind === 'city';
+    t.hpBase = settlement ? clamp(t.hpBase, 1, 99, d.hpBase) : 0;
+    t.hpPerHero = settlement ? clamp(t.hpPerHero, 0, 20, d.hpPerHero) : 0;
+    t.artX = clamp(t.artX, 0, 100, 50); t.artY = clamp(t.artY, 0, 100, 50);
+    t.artId = typeof t.artId === 'string' && /^[0-9a-f]{32}$/.test(t.artId) ? t.artId : null;
+    t.artData = typeof t.artData === 'string' && t.artData.startsWith('data:image/') ? t.artData : null;
+    t.updatedAt = +t.updatedAt || 0;
+    return t;
+  }
+  const isDefault = t => !t.updatedAt;
+  const hpText = t => `${t.hpBase}${t.hpPerHero ? ` + ${t.hpPerHero}/hero` : ''}`;
+
+  function renderTile() {
+    const t = state.tile, src = artSrc(t);
+    const kind = t.kind;
+    const bg = kind === 'resource' ? frameBackground([t.plus])
+      : kind === 'lair' ? 'radial-gradient(ellipse 85% 62% at 50% 30%,#5a1414 0%,#140404 100%)' : FRAME_NAVY;
+    tileEl.style.background = `var(--noise),${bg}`;
+    const p = kind === 'resource' ? pal(t.plus) : pal('');
+    const sym = kind === 'resource' ? symbolSVG(t.plus) : iconSVG(SERVICES[t.service] ? SERVICES[t.service].icon : TILE_ICONS[kind], '#ffffff');
+    const artStyle = src
+      ? `background-image:url('${src}');background-position:${t.artX}% ${t.artY}%`
+      : `background:radial-gradient(circle at 50% 42%,${p.light} 0%,${p.mid} 50%,${p.dark} 100%)`;
+    const med = (cls, inner, bgIn) => `<div class="tmed ${cls}"><div class="med-in"${bgIn ? ` style="background:${bgIn}"` : ''}>${inner}</div></div>`;
+    const text = (t.rules.trim() ? richText(t.rules, '') : '') + (t.flavor.trim() ? `<div class="tflav">${richText(t.flavor, '')}</div>` : '');
+    let left, mid, right;
+    if (kind === 'resource') {
+      left = `<div class="tside">${med('', symbolSVG(t.plus), COLORS[t.plus].med)}<span class="tlab">+ 4–6</span></div>`;
+      right = `<div class="tside">${med('minus', symbolSVG(t.minus), COLORS[t.minus].med)}<span class="tlab">− 1–3</span></div>`;
+      mid = `<div class="tbox">${text || `<p>Harvest: roll a d6. 4–6 gives ${pipHTML(t.plus)}, 1–3 gives ${pipHTML(t.minus)}.</p>`}</div>`;
+    } else if (kind === 'lair') {
+      left = `<div class="tside">${med('lair', iconSVG(TILE_ICONS.lair))}<span class="tlab">Lair</span></div>`;
+      right = `<div class="tside">${med('lair', kindSVG('lackey', '#f3e6c4'))}<span class="tlab">Lackeys</span></div>`;
+      mid = `<div class="tbox">${text}</div>`;
+    } else {
+      const icon = kind === 'city' ? TILE_ICONS.city : SERVICES[t.service].icon;
+      left = `<div class="tside">${med('svc', iconSVG(icon))}<span class="tlab">${kind === 'city' ? 'City' : esc(SERVICES[t.service].label)}</span></div>`;
+      right = `<div class="tside"><div class="thp"><div class="thp-in"><b>${t.hpBase}</b><small>${t.hpPerHero ? `+${t.hpPerHero}/HERO` : 'HP'}</small></div></div><span class="tlab">HP</span></div>`;
+      const svcs = kind === 'city' ? `<div class="tsvcs">${Object.keys(SERVICES).map(svcPip).join('')}</div>` : '';
+      mid = `<div class="tbox">${svcs}${text}</div>`;
+    }
+    tileEl.innerHTML = `
+      <svg class="filigree" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><linearGradient id="tgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc94"/><stop offset=".45" stop-color="#a67c35"/><stop offset="1" stop-color="#e6c46f"/></linearGradient></defs>
+        <rect x="1.8" y="1.8" width="96.4" height="96.4" rx="2.6" fill="none" stroke="#7d5a22" stroke-width=".6"/>
+        <rect x="2.9" y="2.9" width="94.2" height="94.2" rx="2" fill="none" stroke="url(#tgold)" stroke-width=".35"/>
+        ${[[2.9, 2.9], [97.1, 2.9], [2.9, 97.1], [97.1, 97.1]].map(([x, y]) => `<rect x="${x - 1.3}" y="${y - 1.3}" width="2.6" height="2.6" transform="rotate(45 ${x} ${y})" fill="url(#tgold)"/>`).join('')}
+      </svg>
+      <div class="tile-art" style="${artStyle}">${src ? '' : `<span class="tsym">${sym}</span>`}</div>
+      <div class="tile-name"><span>${esc(t.name) || 'Untitled'}</span></div>
+      <div class="tile-base">${left}${mid}${right}</div>`;
+    fitTile();
+  }
+  function fitTile() {
+    const tall = el => el.scrollHeight > el.clientHeight + 1, wide = el => el.scrollWidth > el.clientWidth + 1;
+    const box = tileEl.querySelector('.tbox'), name = tileEl.querySelector('.tile-name span');
+    let f = 1; tileEl.style.setProperty('--tf', 1);
+    while (box && tall(box) && f > .62) { f -= .04; tileEl.style.setProperty('--tf', f.toFixed(2)); }
+    let n = 1; tileEl.style.setProperty('--tn', 1);
+    while (name && wide(name) && n > .6) { n -= .04; tileEl.style.setProperty('--tn', n.toFixed(2)); }
+    $('#tTextWarn').hidden = !(box && tall(box));
+  }
+
+  function renderTileList() {
+    const groups = [['Settlements and lair', state.tiles.filter(t => t.kind !== 'resource')], ['Resource tiles', state.tiles.filter(t => t.kind === 'resource')]];
+    $('#tileCount').textContent = `${state.tiles.length} tiles`;
+    $('#tileList').innerHTML = groups.map(([title, list]) => `<li class="tl-group">${title}</li>` + list.map(t => {
+      const lead = t.kind === 'resource' ? pipHTML(t.plus) : svcPip(t.kind === 'village' ? t.service : t.kind);
+      const sub = t.kind === 'resource' ? `+${COLORS[t.plus].name} / −${COLORS[t.minus].name}`
+        : t.kind === 'village' ? `${SERVICES[t.service].label} · HP ${hpText(t)}` : t.kind === 'city' ? `All services · HP ${hpText(t)}` : 'Villain lair';
+      const sf = t.kind === 'resource' ? pal(t.plus).mid : t.kind === 'lair' ? '#7a1d1d' : '#b08a4a';
+      return `<li><button type="button" class="deck-item" data-tile="${t.id}" style="--sf:${sf}" aria-current="${t.id === state.tile.id}">
+        ${lead}<span><span class="di-name">${esc(t.name) || 'Untitled'}</span><span class="di-sub">${esc(sub)}${isDefault(t) ? ' · default' : ''}</span></span>
+        <span class="di-cost">${t.kind === 'resource' ? pipHTML(t.minus) : ''}</span></button></li>`;
+    }).join('')).join('');
+    $('#tileNote').textContent = (mode === 'db' ? 'Tiles are saved with this page.' : 'Tiles are saved on this device only.') +
+      ' Edits save as you type. Export puts the tiles and the cards in one file for the game simulation; Merge brings tiles in too, and the newer edit wins.';
+  }
+
+  function buildTileForm() {
+    const sw = (k, group) => `<button type="button" class="sw" role="radio" data-${group}="${k}" style="--sf:${pal(k).sw}" aria-checked="false">${pipHTML(k)}<span>${COLORS[k].name}</span></button>`;
+    $('#tPlus').innerHTML = ORDER.map(k => sw(k, 'plus')).join('');
+    $('#tMinus').innerHTML = ORDER.map(k => sw(k, 'minus')).join('');
+  }
+  function loadTileIntoForm() {
+    const t = state.tile;
+    $$('[data-t]').forEach(el => {
+      const v = t[el.dataset.t];
+      if (document.activeElement !== el || el.value !== String(v)) el.value = v ?? '';
+    });
+    $('#tKind').textContent = TILE_KIND_LABEL[t.kind];
+    $('#tResGroup').hidden = t.kind !== 'resource';
+    $('#tSetGroup').hidden = !(t.kind === 'village' || t.kind === 'city');
+    $('#tService').textContent = t.kind === 'city' ? 'all services' : t.kind === 'village' ? SERVICES[t.service].label.toLowerCase() : '';
+    $('#tServiceHint').textContent = t.kind === 'city'
+      ? 'The city offers all four services. Its HP is the base plus the bonus for each hero in the game.'
+      : `Each village offers one service; this one is ${t.kind === 'village' ? SERVICES[t.service].label : ''}. Its HP is the base plus the bonus for each hero in the game.`;
+    $$('#tPlus .sw').forEach(b => { b.setAttribute('aria-checked', String(b.dataset.plus === t.plus)); });
+    $$('#tMinus .sw').forEach(b => { b.setAttribute('aria-checked', String(b.dataset.minus === t.minus)); b.disabled = b.dataset.minus === t.plus || readOnly; });
+    $('#tArtClear').hidden = !(t.artId || t.artData);
+    $('#tArtX').disabled = $('#tArtY').disabled = !(t.artId || t.artData);
+    $('#tReset').disabled = readOnly || isDefault(t);
+    updateTileStatus();
+  }
+  function updateTileStatus(text) {
+    const st = $('#tStatus'), t = state.tile;
+    let s, label;
+    if (readOnly) { s = 'readonly'; label = 'View only'; }
+    else if (text || state.tileSaving) { s = 'saving'; label = text || 'Saving…'; }
+    else if (isDefault(t)) { s = 'new'; label = 'Default tile'; }
+    else { s = 'saved'; label = mode === 'db' ? 'Saved to tiles' : 'Saved in this browser'; }
+    st.dataset.s = s; st.textContent = label;
+  }
+
+  function loadTile(id) {
+    flushTileSave();
+    state.tile = clone(state.tiles.find(t => t.id === id) || state.tiles[0]);
+    loadTileIntoForm(); renderTile(); renderTileList();
+  }
+
+  // ----- tile storage -----
+  const readTilesLS = () => { try { return (JSON.parse(localStorage.getItem(TILE_LS_KEY) || '[]') || []).filter(o => o && o.id); } catch { return []; } };
+  async function readLocalTiles() {
+    if (useIdb) { try { return await IDB.all('tiles'); } catch { useIdb = false; } }
+    return readTilesLS();
+  }
+  // Stored tiles replace their defaults; tiles never edited stay at their defaults.
+  function setTiles(rows) {
+    const byId = Object.fromEntries(rows.filter(r => TILE_BY_ID[r.id]).map(r => [r.id, r]));
+    state.tiles = TILE_DEFAULTS.map(d => byId[d.id] ? normTile(byId[d.id]) : clone(d));
+    if (!state.tileTouched) state.tile = clone(state.tiles.find(t => t.id === state.tile.id) || state.tiles[0]);
+    renderTileList(); loadTileIntoForm(); renderTile();
+  }
+  function writeTilesLS() {
+    try { localStorage.setItem(TILE_LS_KEY, JSON.stringify(state.tiles.filter(t => !isDefault(t)))); } catch { storeFail(); }
+  }
+  let tileChain = Promise.resolve(), tileTimer = 0;
+  function persistTile(tile, at) {
+    const body = clone(tile); body.updatedAt = at || Date.now();
+    state.tileSaving = true; updateTileStatus();
+    tileChain = tileChain.then(async () => {
+      if (readOnly) return;
+      if (db) await db.collection('tiles').doc(body.id).set(body);
+      const i = state.tiles.findIndex(t => t.id === body.id);
+      state.tiles[i] = body;
+      if (state.tile.id === body.id) state.tile.updatedAt = body.updatedAt;
+      if (!db) { if (useIdb) await IDB.put(body, 'tiles').catch(storeFail); else writeTilesLS(); }
+      renderTileList();
+    }).catch(writeError).finally(() => { state.tileSaving = false; state.tileTouched = false; loadTileIntoForm(); });
+    return tileChain;
+  }
+  function scheduleTileSave() {
+    if (readOnly) return;
+    clearTimeout(tileTimer);
+    state.tileSaving = true; updateTileStatus();
+    tileTimer = setTimeout(() => { tileTimer = 0; persistTile(state.tile); }, 650);
+  }
+  function flushTileSave() { if (tileTimer) { clearTimeout(tileTimer); tileTimer = 0; if (!readOnly) persistTile(state.tile); } }
+  function tileChanged() { state.tileTouched = true; renderTile(); scheduleTileSave(); }
+
+  function resetTile() {
+    if (readOnly) return;
+    clearTimeout(tileTimer); tileTimer = 0;
+    const id = state.tile.id, def = clone(TILE_BY_ID[id]);
+    tileChain = tileChain.then(async () => {
+      if (db) await db.collection('tiles').doc(id).delete();
+      else if (useIdb) await IDB.del(id, 'tiles').catch(storeFail);
+      state.tiles[state.tiles.findIndex(t => t.id === id)] = def;
+      if (!db && !useIdb) writeTilesLS();
+    }).catch(writeError).finally(() => {
+      state.tileTouched = false; state.tile = clone(def);
+      loadTileIntoForm(); renderTile(); renderTileList();
+      toast(`"${def.name}" is back to its default.`);
+    });
+  }
+
+  async function setTileArt(file) {
+    if (readOnly) return;
+    if (!file || !/^image\//.test(file.type)) { toast('Choose an image file: PNG, JPG, WebP or GIF.'); return; }
+    let img;
+    try { img = await loadImage(file); } catch { toast('That image could not be opened. Try a PNG or JPG.'); return; }
+    const t = state.tile;
+    $('#tDropText').textContent = 'Uploading…';
+    try {
+      if (!assets) throw new Error('no assets');
+      const blob = await new Promise(r => scaled(img, 1200).toBlob(r, 'image/jpeg', .86));
+      const res = await assets.upload(blob, { type: 'image/jpeg' });
+      artUrls[res.id] = res.url; t.artId = res.id; t.artData = null;
+    } catch { t.artData = scaled(img, 1000).toDataURL('image/jpeg', .82); t.artId = null; }
+    $('#tDropText').textContent = 'or drop an image here';
+    t.artX = 50; t.artY = 50;
+    loadTileIntoForm(); tileChanged();
+  }
+  async function exportTilePng() {
+    if (!window.html2canvas) { toast('The image exporter did not load. Reload the page and try again.'); return; }
+    const btn = $('#tPng'); btn.disabled = true; btn.textContent = 'Rendering…';
+    try {
+      if (document.fonts) await document.fonts.ready;
+      const canvas = await html2canvas(tileEl, { scale: 3, backgroundColor: null, useCORS: true, logging: false });
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      await saveFile('tile-' + slug(state.tile.name) + '.png', blob);
+    } catch { toast('The tile image could not be rendered.'); }
+    btn.disabled = false; btn.textContent = 'Export PNG';
+  }
+
+  const MODE_KEY = 'spellcard-forge.mode';
+  function setMode(m) {
+    if (m === 'tiles') flushSave(); else flushTileSave();
+    document.body.dataset.mode = m;
+    $$('.modes button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === m)));
+    try { localStorage.setItem(MODE_KEY, m); } catch {}
+    if (m === 'tiles') renderTile(); else fit();
+  }
+
+  function bindTiles() {
+    $$('.modes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    $('#tileBench').addEventListener('input', e => {
+      const el = e.target;
+      if (!el.dataset || !el.dataset.t || readOnly) return;
+      let v = el.value;
+      if (el.type === 'number' || el.type === 'range') v = clamp(v, +el.min || 0, +el.max || 99, 0);
+      state.tile[el.dataset.t] = v;
+      tileChanged();
+      if (el.dataset.t === 'name') renderTileList();
+    });
+    for (const [sel, key] of [['#tPlus', 'plus'], ['#tMinus', 'minus']]) {
+      $(sel).addEventListener('click', e => {
+        const b = e.target.closest('.sw'); if (!b || b.disabled || readOnly) return;
+        const t = state.tile;
+        t[key] = b.dataset[key];
+        // Picking the + element the − resource already has swaps them, so the two always differ.
+        if (key === 'plus' && t.minus === t.plus) t.minus = TILE_BY_ID[t.id].plus !== t.plus ? TILE_BY_ID[t.id].plus : ORDER.find(k => k !== t.plus);
+        loadTileIntoForm(); tileChanged(); renderTileList();
+      });
+    }
+    $('#tileList').addEventListener('click', e => {
+      const b = e.target.closest('[data-tile]'); if (b && b.dataset.tile !== state.tile.id) loadTile(b.dataset.tile);
+    });
+    $('#tReset').addEventListener('click', resetTile);
+    $('#tPng').addEventListener('click', exportTilePng);
+    $('#btnExportTiles').addEventListener('click', exportDeck);
+    $('#tArt').addEventListener('change', e => { setTileArt(e.target.files[0]); e.target.value = ''; });
+    $('#tArtClear').addEventListener('click', () => { if (readOnly) return; state.tile.artId = null; state.tile.artData = null; loadTileIntoForm(); tileChanged(); });
+    const drop = $('#tDrop');
+    ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, () => drop.classList.remove('over')));
+    drop.addEventListener('drop', e => { e.preventDefault(); setTileArt(e.dataTransfer.files[0]); });
+    if (window.ResizeObserver) new ResizeObserver(() => fitTile()).observe($('.tile-wrap'));
   }
 
   // ---------- toast ----------
@@ -1192,7 +1686,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     $('#btnNew').addEventListener('click', () => guardDiscard('new', () => {
       flushSave();
       const prev = state.card;
-      state.card = { ...blankCard(prev.color), logoId: prev.logoId, logoData: prev.logoData }; state.touched = false;
+      state.card = { ...blankCard(prev.color), deck: prev.deck, logoId: prev.logoId, logoData: prev.logoData }; state.touched = false;
       loadIntoForm(); renderCard(); renderDeck(); updateStatus(); $('#fName').focus(); $('#fName').select();
     }));
     $('#btnDup').addEventListener('click', duplicate);
@@ -1216,22 +1710,26 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       if (c && c.id !== state.card.id) guardDiscard('load:' + c.id, () => loadCard(c));
     });
     $('#deckSearch').addEventListener('input', e => { state.query = e.target.value; renderDeck(); });
-    $('#deckChips').addEventListener('click', e => {
-      const b = e.target.closest('.chip'); if (!b) return;
-      state.filter = b.dataset.filter;
-      $$('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderDeck();
-    });
-    $('#lvDown').addEventListener('click', () => { state.lv = Math.max(0, state.lv - 1); updateLv(); });
-    $('#lvUp').addEventListener('click', () => { state.lv = Math.min(9, state.lv + 1); updateLv(); });
+    $('#deckFilter').addEventListener('change', e => { state.filter = e.target.value; renderDeck(); });
+    $('#lvDown').addEventListener('click', () => { state.lv = Math.max(1, state.lv - 1); updateLv(); });
+    $('#lvUp').addEventListener('click', () => { state.lv = Math.min(3, state.lv + 1); updateLv(); });
     $('#btnRoll').addEventListener('click', roll);
     document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (!state.card.id) addToDeck(); else flushSave(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (document.body.dataset.mode === 'tiles') flushTileSave();
+        else if (!state.card.id) addToDeck(); else flushSave();
+      }
     });
   }
 
   // ---------- boot ----------
   async function boot() {
-    makeNoise(); buildStatic(); bind();
+    makeNoise(); buildStatic(); bind(); buildTileForm(); bindTiles();
+    let savedMode = 'cards';
+    try { savedMode = localStorage.getItem(MODE_KEY) === 'tiles' ? 'tiles' : 'cards'; } catch {}
+    setMode(savedMode);
+    loadTileIntoForm(); renderTile(); renderTileList();
     const top = $('.top'), setHdr = () => document.documentElement.style.setProperty('--hdr', top.offsetHeight + 'px');
     setHdr(); if (window.ResizeObserver) new ResizeObserver(setHdr).observe(top);
     // Re-measure the text when the card changes size, since rounding at small sizes changes what fits.
@@ -1242,7 +1740,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const useCap = window.claude && typeof window.claude.use === 'function' ? n => window.claude.use(n).catch(() => null) : null;
     // The installable copy (index.html with a manifest) caches its files so it opens without a connection.
     if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) navigator.serviceWorker.register('sw.js').catch(() => {});
-    if (!useCap) { state.deck = await readLocal(); sortDeck(); renderDeck(); openFirst(); return; }
+    if (!useCap) { state.deck = await readLocal(); sortDeck(); renderDeck(); openFirst(); setTiles(await readLocalTiles()); return; }
     const [d, dl, as, us] = await Promise.all(['db', 'downloads', 'assets', 'user'].map(useCap));
     db = d; downloads = dl; assets = as;
     if (us) { try { if (await us.can('data.write') === false) readOnly = true; } catch {} }
@@ -1252,7 +1750,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         state.deck = snap.docs.map(doc => ({ ...normalize(doc.data()), id: doc.id, updatedAt: doc.data().updatedAt || 0 }));
         sortDeck(); renderDeck(); openFirst();
       }, () => toast('The deck stopped syncing. Reload the page to reconnect.'));
-    } else { state.deck = await readLocal(); sortDeck(); openFirst(); }
+      db.collection('tiles').onSnapshot(snap => setTiles(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))),
+        () => toast('The tiles stopped syncing. Reload the page to reconnect.'));
+    } else { state.deck = await readLocal(); sortDeck(); openFirst(); setTiles(await readLocalTiles()); }
     renderDeck(); updateStatus(); loadIntoForm();
     if (readOnly) $$('.editor input, .editor textarea, .editor select, .editor button').forEach(el => el.disabled = true);
   }

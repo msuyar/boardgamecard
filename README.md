@@ -1,7 +1,14 @@
 # Spellcard Forge
 
-A card editor for Magic-style spell cards that use dice for damage. Each card has
-damage at the bottom left, upcast cost in the middle and upcast damage at the bottom right.
+A card editor for Magic-style spell cards that use dice for damage. Each card has three damage plaques
+along the bottom: Tier I (hero levels 0–2), Tier II (levels 3–4) and Tier III (levels 5–6). Each card also
+belongs to a deck (a class, race, villain, lackey or item deck), which the game simulation in
+`D:\Godot\villain-vs-heroes` reads.
+
+A second mode, **Tiles**, edits the 24 board tiles (see [Tiles](#tiles)).
+
+The local `index.html` has the tier plaques, the deck field and the Tile Creator. The online version below still shows
+upcasts and has no tiles until it is republished from this file.
 
 Online version: https://claude.ai/artifact/2RJSfrAuLrVAHKAF116Sm7
 
@@ -12,6 +19,7 @@ Online version: https://claude.ai/artifact/2RJSfrAuLrVAHKAF116Sm7
 | `index.html` | The whole app: markup, styles and script in one file. |
 | `manifest.webmanifest`, `icons/` | Let Android (Chrome) install the app on the home screen. |
 | `sw.js` | Saves the app's files on the device so it opens without internet. |
+| `docs/GDD.md` | Game Design Document for the board game these cards are for, and its Godot simulation. |
 | `decks/spellcard-deck.json` | The deck exported from the online version on 2026-10-25. |
 
 ## Running it locally
@@ -99,7 +107,7 @@ The top-left corner holds the expansion logo (an uploaded image) and nothing els
 logo of the card you were editing. The artist credit, if filled in, shows at the bottom right.
 
 Below the art is the parchment: the name and a card-type icon (Lackey, Spell, Buff, Debuff or Item) at the top, then rules text, a divider, and the flavor
-panel, which has a fixed height. The three plaques along the bottom show damage, upcast cost and upcast damage.
+panel, which has a fixed height. The three plaques along the bottom show the damage dice for Tier I, II and III.
 In rules text, `{2d6}` shows an inline die, `{R}` a color symbol and `*word*` italics.
 
 ## Deck file format
@@ -119,11 +127,11 @@ In rules text, `{2d6}` shows an inline die, `{R}` a color symbol and `*word*` it
       "rarity": "rare",
       "rules": "… It takes {3d4} cold damage …",
       "flavor": "",
+      "deck": "class:druid",
       "hasDamage": true,
-      "hasUpcast": true,
       "dmg": { "count": 3, "die": 4, "bonus": 0, "type": "cold" },
-      "upCost": "1N",
-      "up": { "count": 1, "die": 4, "bonus": 1 },
+      "tier2": { "count": 4, "die": 4, "bonus": 1 },
+      "tier3": { "count": 5, "die": 4, "bonus": 2 },
       "artData": "data:image/jpeg;base64,…",
       "artX": 50, "artY": 50,
       "artist": "", "number": "002"
@@ -132,9 +140,13 @@ In rules text, `{2d6}` shows an inline die, `{R}` a color symbol and `*word*` it
 }
 ```
 
-- `hasDamage: false` hides the damage plaque (bottom left) and the upcast damage plaque (bottom right), for armor, buffs and other cards without damage.
-  `hasUpcast: false` hides the upcast plaques. With both off, the card has only rules and flavor text, and the text box takes the extra space.
-  If a card leaves these out, `hasDamage` counts as true and `hasUpcast` is true when `upCost` isn't empty.
+- `dmg` is the Tier I damage (and holds the damage type), `tier2` and `tier3` the Tier II and III damage.
+  `hasDamage: false` hides the three plaques, for armor, buffs and other cards without damage; the text box then takes the extra space.
+  If a card leaves it out, `hasDamage` counts as true.
+- Cards saved with an upcast (`upCost`, `up`, `hasUpcast`) are converted when loaded or merged: Tier II is the
+  damage plus one upcast and Tier III the damage plus two. A card without an upcast gets the same damage on all three tiers.
+- `deck` is the deck the card belongs to: `class:wizard`, `race:elf`, `villain:lich`, `lackey:lich`, `item:weapon`,
+  `item:armor`, `item:consumable` and so on, or empty for no deck. The deck list filters by it.
 - `kind` is the card type shown as an icon: `lackey`, `spell`, `buff`, `debuff` or `item`. Cards without it get a type guessed from their old `type` text.
   `type` and `rarity` are still kept in the file but no longer shown on the card.
 - `rarity` is one of `common`, `uncommon`, `rare` or `mythic`.
@@ -145,6 +157,27 @@ In rules text, `{2d6}` shows an inline die, `{R}` a color symbol and `*word*` it
   A card can have both `artData` and `artId`: the image itself, plus the id of the same image in the online version.
 - `updatedAt` is when the card was last edited (milliseconds since 1970). Merge keeps whichever copy has the larger value.
 - Cards without `"v": 2` use the old color letters (W U B R G P). Merge converts them automatically.
+
+## Tiles
+
+The **Cards / Tiles** switch at the top opens the Tile Creator, for the board's 24 tiles (GDD 3.1):
+
+- 18 resource tiles, each with a **+** resource (taken on a harvest roll of 4–6) and a different **−** resource (1–3),
+  shown as the two medallions at the bottom of the tile.
+- 4 villages, one per crafting service (Weapons, Armor, Training, Consumables), each with HP (a base plus a bonus per hero).
+- The city (all four services, with HP) and the villain's lair.
+
+Every tile has a name, art, focus sliders, rules text and flavor text. The set is fixed: tiles are edited, not added or
+deleted. A tile that was never edited shows its default (marked *default* in the list), and **Reset to default** brings it back.
+Edits save as you type, in the same place as the deck (this browser, or the online page). **Export PNG** saves the tile as an image.
+
+**Export** writes the cards and all 24 tiles into one file (`"tiles": [...]` next to `"cards"`), and **Merge** brings
+tiles in too: a tile in the file replaces the one here when its edit is newer. For the game simulation, run
+`python tools/sync_cards.py` in `D:\Godot\villain-vs-heroes` after exporting.
+
+Tile record: `id` (fixed, e.g. `tile-res-07`, `tile-village-armor`, `tile-city`, `tile-lair`), `kind`
+(`resource`, `village`, `city`, `lair`), `name`, `plus`, `minus` (element letters, resource tiles), `service` (villages),
+`hpBase`, `hpPerHero` (settlements), `rules`, `flavor`, `artData` / `artId`, `artX`, `artY`, `updatedAt`.
 
 ## Changing the app
 
