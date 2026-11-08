@@ -66,6 +66,23 @@ image instead of storing a smaller copy.
 
 To bring the deck saved in `decks/` in, click **Merge** and choose `decks/spellcard-deck.json`.
 
+## Working with one deck
+
+The deck picker under the search box lists every deck: the 8 classes, the 6 races, the villain, lackey and item
+decks, and **No deck**, with the number of cards in each. Empty decks are listed too. Picking a deck:
+
+- shows only that deck's cards;
+- makes **New card** start in that deck;
+- turns **Export all** into **Export deck**, which saves only that deck's cards (no tiles) as `deck-class-wizard.json`,
+  `deck-race-elf.json` and so on. The file names its deck: `"deck": "class:wizard"`.
+
+**All decks** shows every card again, and **Export all** saves every card plus the 24 tiles in `spellcard-deck.json`.
+The picked deck is remembered in this browser. To move a card to another deck, change **Belongs to** in the editor.
+
+**Merge** works the same for a one-deck file: its cards are added or updated, and nothing else changes.
+For the game simulation, `python tools/sync_cards.py deck-class-wizard.json` (in `D:\Godot\villain-vs-heroes`)
+replaces only the Wizard cards there and keeps the other decks.
+
 ## Colors
 
 | Letter | Color | Theme |
@@ -146,7 +163,7 @@ In rules text, `{2d6}` shows an inline die, `{R}` a color symbol and `*word*` it
 - Cards saved with an upcast (`upCost`, `up`, `hasUpcast`) are converted when loaded or merged: Tier II is the
   damage plus one upcast and Tier III the damage plus two. A card without an upcast gets the same damage on all three tiers.
 - `deck` is the deck the card belongs to: `class:wizard`, `race:elf`, `villain:lich`, `lackey:lich`, `item:weapon`,
-  `item:armor`, `item:consumable` and so on, or empty for no deck. The deck list filters by it.
+  `item:armor`, `item:consumable` and so on, or empty for no deck. See [Working with one deck](#working-with-one-deck).
 - `kind` is the card type shown as an icon: `lackey`, `spell`, `buff`, `debuff` or `item`. Cards without it get a type guessed from their old `type` text.
   `type` and `rarity` are still kept in the file but no longer shown on the card.
 - `rarity` is one of `common`, `uncommon`, `rare` or `mythic`.
@@ -171,7 +188,7 @@ Every tile has a name, art, focus sliders, rules text and flavor text. The set i
 deleted. A tile that was never edited shows its default (marked *default* in the list), and **Reset to default** brings it back.
 Edits save as you type, in the same place as the deck (this browser, or the online page). **Export PNG** saves the tile as an image.
 
-**Export** writes the cards and all 24 tiles into one file (`"tiles": [...]` next to `"cards"`), and **Merge** brings
+**Export all** writes the cards and all 24 tiles into one file (`"tiles": [...]` next to `"cards"`), and **Merge** brings
 tiles in too: a tile in the file replaces the one here when its edit is newer. For the game simulation, run
 `python tools/sync_cards.py` in `D:\Godot\villain-vs-heroes` after exporting.
 

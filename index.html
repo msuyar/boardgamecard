@@ -182,6 +182,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .deck-empty{padding:18px 12px;border:1.5px dashed var(--line);border-radius:9px;color:var(--muted);font-size:13px;text-align:center;line-height:1.5}
 .deck-empty strong{display:block;color:var(--ink);font:400 16px var(--f-display);margin-bottom:4px}
 .deck-note{margin:0;font-size:11.5px;color:var(--muted)}
+.deck-pick{margin:-4px 0 0;font-size:12px;color:var(--muted)}
+.deck-pick strong{color:var(--ink);font-weight:600}
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);max-width:min(92vw,460px);padding:10px 16px;border-radius:9px;background:var(--ink);color:var(--bg);font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -347,7 +349,7 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     <div class="group">
       <h2>Deck <small>class, race, villain or item</small></h2>
       <label class="field"><span>Belongs to</span><select id="fDeck" data-f="deck"></select></label>
-      <p class="hint">Which deck the card is shuffled into. The game simulation reads this, and the deck list filters by it. New cards start in the deck of the card you were editing.</p>
+      <p class="hint">Which deck the card is shuffled into. The game simulation reads this, and the deck list filters by it. New cards start in the deck picked in the deck list, or else in the deck of the card you were editing.</p>
     </div>
 
     <div class="group">
@@ -457,7 +459,8 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
       </div>
     </div>
     <input type="search" id="deckSearch" placeholder="Search cards" aria-label="Search cards">
-    <select id="deckFilter" aria-label="Filter by deck"></select>
+    <select id="deckFilter" aria-label="Deck to show, add to and export"></select>
+    <p class="deck-pick" id="deckPick" hidden></p>
     <ul class="deck-list" id="deckList"></ul>
     <div class="deck-empty" id="deckEmpty" hidden></div>
     <p class="deck-note" id="deckNote"></p>
@@ -518,7 +521,7 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     <div class="deck-head">
       <h2>Tiles<span id="tileCount"></span></h2>
       <div class="deck-io">
-        <button class="btn btn-sm js-export" type="button" id="btnExportTiles">Export</button>
+        <button class="btn btn-sm js-export" type="button" id="btnExportTiles">Export all</button>
         <label class="btn btn-sm" for="fImport">Merge</label>
       </div>
     </div>
@@ -788,7 +791,10 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
   const clone = o => JSON.parse(JSON.stringify(o));
 
   // ---------- state ----------
-  const state = { card: sampleCard(), deck: [], touched: false, saving: false, lv: 1, filter: 'all', query: '' };
+  // The deck picked in the deck list is remembered in this browser.
+  const FILTER_KEY = 'spellcard-forge.deckFilter';
+  const savedFilter = (() => { try { return localStorage.getItem(FILTER_KEY) ?? 'all'; } catch { return 'all'; } })();
+  const state = { card: sampleCard(), deck: [], touched: false, saving: false, lv: 1, filter: savedFilter, query: '' };
   let db = null, downloads = null, assets = null, readOnly = false, mode = 'local';
   const artUrls = {};
   const cardEl = $('#card');
@@ -948,14 +954,22 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     const what = c.hasDamage ? tierDice(c).map(d => diceText(d)).join(' / ') + (c.dmg.type ? ' ' + c.dmg.type : '') : (KINDS[c.kind] || KINDS.spell).label;
     return `${deckLabel(c.deck)} · ${what}`;
   }
+  // Every deck is listed, empty ones too, so you can pick a deck and start adding cards to it.
   function renderDeckFilter() {
     const counts = {};
     for (const c of state.deck) counts[c.deck] = (counts[c.deck] || 0) + 1;
-    if (state.filter !== 'all' && !counts[state.filter]) state.filter = 'all';
-    const keys = Object.keys(DECKS).filter(k => counts[k]).concat(Object.keys(counts).filter(k => !(k in DECKS)));
-    $('#deckFilter').innerHTML = `<option value="all">All decks</option>` +
-      keys.map(k => `<option value="${esc(k)}">${esc(deckLabel(k))} (${counts[k]})</option>`).join('');
+    const custom = Object.keys(counts).filter(k => !(k in DECKS));
+    if (state.filter !== 'all' && !(state.filter in DECKS) && !counts[state.filter]) state.filter = 'all';
+    const opt = k => `<option value="${esc(k)}">${esc(deckLabel(k))} (${counts[k] || 0})</option>`;
+    $('#deckFilter').innerHTML = `<option value="all">All decks (${state.deck.length})</option>` +
+      DECK_GROUPS.map(([g, pre, names]) => `<optgroup label="${g}">${names.map(n => opt(`${pre}:${n.toLowerCase()}`)).join('')}</optgroup>`).join('') +
+      (custom.length ? `<optgroup label="Other">${custom.map(opt).join('')}</optgroup>` : '') + opt('');
     $('#deckFilter').value = state.filter;
+    const one = state.filter !== 'all';
+    $('#btnExportDeck').textContent = one ? 'Export deck' : 'Export all';
+    const pick = $('#deckPick');
+    pick.hidden = !one;
+    if (one) pick.innerHTML = `New cards go into <strong>${esc(deckLabel(state.filter))}</strong>. Export saves only this deck.`;
   }
   function renderDeck() {
     renderDeckFilter();
@@ -974,9 +988,10 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
       empty.innerHTML = `<strong>No matches</strong>No cards match this search or deck.`;
     } else empty.hidden = true;
     $('#deckNote').textContent = (mode === 'db'
-      ? 'The deck and its art are saved with this page. Export makes a single JSON file with every card, the 24 tiles and their art.'
-      : 'The deck is saved on this device only. Export makes a JSON file with every card, the 24 tiles and their art.') +
-      ' Merge adds a deck file to this deck: new cards are added, and when a card is in both, the newer edit wins.';
+      ? 'The cards and their art are saved with this page.'
+      : 'The cards are saved on this device only.') +
+      ' Export all makes one JSON file with every card, the 24 tiles and their art; with a deck picked, Export deck saves just that deck.' +
+      ' Merge adds a file\'s cards here: new cards are added, and when a card is in both, the newer edit wins.';
   }
 
   // ---------- storage ----------
@@ -1192,13 +1207,16 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
   function loadImageSrc(src) {
     return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = src; });
   }
-  // One file holds the cards and all 24 tiles, so a single export carries both to the game simulation.
-  async function exportDeck() {
+  // `scope` 'all' writes every card and all 24 tiles into one file, which the game simulation reads.
+  // A deck value ("class:wizard", or '' for cards with no deck) writes only that deck's cards.
+  async function exportDeck(scope = 'all') {
+    const one = scope !== 'all', pool = one ? state.deck.filter(c => c.deck === scope) : state.deck;
+    if (one && !pool.length) { toast(`${deckLabel(scope)} has no cards yet, so there is nothing to export.`); return; }
     const btns = $$('.js-export');
-    btns.forEach(b => { b.disabled = true; b.textContent = 'Packing art…'; });
+    btns.forEach(b => { b.dataset.label = b.textContent; b.disabled = true; b.textContent = 'Packing art…'; });
     let missing = 0;
     const cards = [], logos = {}, tiles = [];
-    for (const t of state.tiles) {
+    for (const t of one ? [] : state.tiles) {
       const out = clone(t);
       if (t.artId && !t.artData) {
         try { out.artData = scaled(await loadImageSrc(artSrc(t)), 1200).toDataURL('image/jpeg', .9); }
@@ -1206,7 +1224,7 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
       }
       tiles.push(out);
     }
-    for (const c of state.deck) {
+    for (const c of pool) {
       const out = clone(c);
       if (c.artId && !c.artData) {
         try { out.artData = scaled(await loadImageSrc(artSrc(c)), 1200).toDataURL('image/jpeg', .9); }
@@ -1218,8 +1236,10 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
       }
       cards.push(out);
     }
-    btns.forEach(b => { b.disabled = false; b.textContent = 'Export'; });
-    const ok = await saveFile('spellcard-deck.json', JSON.stringify({ app: 'spellcard-forge', version: 2, cards, tiles }, null, 2));
+    btns.forEach(b => { b.disabled = false; b.textContent = b.dataset.label; });
+    const ok = one
+      ? await saveFile(`deck-${slug(scope || 'no deck')}.json`, JSON.stringify({ app: 'spellcard-forge', version: 2, deck: scope, cards }, null, 2))
+      : await saveFile('spellcard-deck.json', JSON.stringify({ app: 'spellcard-forge', version: 2, cards, tiles }, null, 2));
     if (ok && missing) toast(`Saved the deck, but ${missing} image${missing === 1 ? '' : 's'} could not be read and ${missing === 1 ? 'was' : 'were'} left out.`);
   }
   // Only the online page stores images apart from the cards; on a device every image is inline.
@@ -1615,7 +1635,7 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     });
     $('#tReset').addEventListener('click', resetTile);
     $('#tPng').addEventListener('click', exportTilePng);
-    $('#btnExportTiles').addEventListener('click', exportDeck);
+    $('#btnExportTiles').addEventListener('click', () => exportDeck('all'));
     $('#tArt').addEventListener('change', e => { setTileArt(e.target.files[0]); e.target.value = ''; });
     $('#tArtClear').addEventListener('click', () => { if (readOnly) return; state.tile.artId = null; state.tile.artData = null; loadTileIntoForm(); tileChanged(); });
     const drop = $('#tDrop');
@@ -1686,13 +1706,15 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     $('#btnNew').addEventListener('click', () => guardDiscard('new', () => {
       flushSave();
       const prev = state.card;
-      state.card = { ...blankCard(prev.color), deck: prev.deck, logoId: prev.logoId, logoData: prev.logoData }; state.touched = false;
+      // A new card goes into the deck picked in the deck list, or else stays in the deck of the card you were editing.
+      const deck = state.filter !== 'all' ? state.filter : prev.deck;
+      state.card = { ...blankCard(prev.color), deck, logoId: prev.logoId, logoData: prev.logoData }; state.touched = false;
       loadIntoForm(); renderCard(); renderDeck(); updateStatus(); $('#fName').focus(); $('#fName').select();
     }));
     $('#btnDup').addEventListener('click', duplicate);
     $('#btnDel').addEventListener('click', deleteCard);
     $('#btnPng').addEventListener('click', exportPng);
-    $('#btnExportDeck').addEventListener('click', exportDeck);
+    $('#btnExportDeck').addEventListener('click', () => exportDeck(state.filter));
     $('#fImport').addEventListener('change', e => { importDeck(e.target.files[0]); e.target.value = ''; });
     $('#fArt').addEventListener('change', e => { setArt(e.target.files[0]); e.target.value = ''; });
     $('#btnArtClear').addEventListener('click', () => { if (readOnly) return; state.card.artId = null; state.card.artData = null; loadIntoForm(); changed(); });
@@ -1710,7 +1732,10 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
       if (c && c.id !== state.card.id) guardDiscard('load:' + c.id, () => loadCard(c));
     });
     $('#deckSearch').addEventListener('input', e => { state.query = e.target.value; renderDeck(); });
-    $('#deckFilter').addEventListener('change', e => { state.filter = e.target.value; renderDeck(); });
+    $('#deckFilter').addEventListener('change', e => {
+      state.filter = e.target.value; renderDeck();
+      try { localStorage.setItem(FILTER_KEY, state.filter); } catch {}
+    });
     $('#lvDown').addEventListener('click', () => { state.lv = Math.max(1, state.lv - 1); updateLv(); });
     $('#lvUp').addEventListener('click', () => { state.lv = Math.min(3, state.lv + 1); updateLv(); });
     $('#btnRoll').addEventListener('click', roll);
@@ -1736,7 +1761,11 @@ body:not([data-mode="tiles"]) .tile-only{display:none!important}
     if (window.ResizeObserver) new ResizeObserver(() => fit()).observe($('.card-wrap'));
     loadIntoForm(); renderCard(); renderDeck(); updateStatus(); updateLv();
     if (document.fonts) document.fonts.ready.then(fit);
-    const openFirst = () => { if (!state.touched && !state.card.id && state.deck.length) loadCard(state.deck[0]); };
+    // Open the newest card of the picked deck, or the newest card overall when that deck is empty.
+    const openFirst = () => {
+      if (state.touched || state.card.id || !state.deck.length) return;
+      loadCard(state.deck.find(c => state.filter === 'all' || c.deck === state.filter) || state.deck[0]);
+    };
     const useCap = window.claude && typeof window.claude.use === 'function' ? n => window.claude.use(n).catch(() => null) : null;
     // The installable copy (index.html with a manifest) caches its files so it opens without a connection.
     if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) navigator.serviceWorker.register('sw.js').catch(() => {});
