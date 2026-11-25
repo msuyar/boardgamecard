@@ -35,6 +35,15 @@ When you open it this way:
 - Fonts (Google Fonts) and the PNG exporter (html2canvas from cdnjs) load from the internet.
   Opened from a file, the page still works offline with fallback fonts, but PNG export is unavailable.
 
+## Handy to know
+
+- **Undo:** deleting a card or resetting a tile shows an **Undo** button for 8 seconds.
+- **Ctrl+S** adds the card you are editing to the deck, or saves an edit at once.
+- **Arrow keys** move between options in the element, card type and harvest pickers, and switch Cards/Tiles.
+- **On a phone** New card, Duplicate, Delete, Export PNG and Reset to default sit under **More** in the header,
+  with a shortcut to the deck or tile list.
+- Closing the page with a new card that was never added to the deck asks first.
+
 ## On an Android phone
 
 The phone needs the folder served over HTTPS once (GitHub Pages, Netlify or similar; opening the file directly
